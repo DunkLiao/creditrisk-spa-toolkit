@@ -1,0 +1,1391 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>佐證抽樣實驗室 V3</title>
+<style>
+/* ===== 主題：改這幾個變數即可換色 ===== */
+:root{
+  --primary:#8a1538; --primary-d:#6b0f2b; --accent:#c9a24b; --accent-l:#f6edd8;
+  --bg:#f6f4f2; --card:#fff; --text:#2b2b2b; --muted:#777; --line:#e3dfdb;
+  --ok:#2e7d32; --warn:#b26a00; --err:#c62828; --radius:10px;
+  font-family:"Microsoft JhengHei","PingFang TC","Noto Sans TC",system-ui,sans-serif;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-size:14px}
+button,input,select,textarea{font:inherit}
+.topbar{position:sticky;top:0;z-index:10;display:flex;align-items:center;gap:10px;height:52px;padding:0 16px;background:var(--primary);color:#fff;box-shadow:0 2px 6px #0003}
+.topbar h1{font-size:17px;margin:0 12px 0 0;white-space:nowrap}
+.topbar h1 small{font-size:11px;font-weight:normal;background:var(--accent);color:#fff;border-radius:8px;padding:1px 7px;margin-left:6px;vertical-align:middle}
+.topbar .sp{flex:1}
+.layout{display:flex;min-height:calc(100vh - 52px)}
+nav.side{width:190px;flex:none;background:#fff;border-right:1px solid var(--line);padding:10px 0}
+nav.side .grp{font-size:12px;color:var(--muted);padding:12px 18px 4px}
+nav.side a{display:block;padding:8px 18px;color:var(--text);text-decoration:none;border-left:3px solid transparent}
+nav.side a:hover{background:var(--accent-l)}
+nav.side a.on{border-left-color:var(--accent);background:var(--accent-l);color:var(--primary);font-weight:bold}
+main{flex:1;padding:18px 22px;min-width:0}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:16px;margin-bottom:16px}
+.card h2{font-size:16px;margin:0 0 12px;color:var(--primary);display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.card h2 .sp{flex:1}
+.card h3{font-size:14px;margin:14px 0 8px;color:var(--primary-d)}
+.btn{border:1px solid var(--line);background:#fff;color:var(--text);padding:6px 12px;border-radius:6px;cursor:pointer}
+.btn:hover{border-color:var(--accent)}
+.btn.pri{background:var(--primary);border-color:var(--primary);color:#fff}
+.btn.pri:hover{background:var(--primary-d)}
+.btn.gold{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn.danger{color:var(--err);border-color:#e9b4b4}
+.btn.sm{padding:3px 8px;font-size:12px}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.topbar .btn{background:transparent;color:#fff;border-color:#ffffff55}
+.topbar .btn:hover{background:#ffffff22}
+table.grid{width:100%;border-collapse:collapse}
+table.grid th,table.grid td{border-bottom:1px solid var(--line);padding:7px 8px;text-align:left;vertical-align:top}
+table.grid th{background:#faf7f2;color:var(--primary-d);font-weight:600;cursor:default;white-space:nowrap}
+table.grid th[data-sort]{cursor:pointer}
+table.grid tr:hover td{background:#fdfbf7}
+.num{text-align:right!important;font-variant-numeric:tabular-nums}
+.tag{display:inline-block;padding:1px 8px;border-radius:10px;font-size:12px;background:#eee;white-space:nowrap}
+.tag.ok{background:#e6f4ea;color:var(--ok)}.tag.warn{background:#fff4e0;color:var(--warn)}.tag.err{background:#fdecea;color:var(--err)}.tag.gold{background:var(--accent-l);color:#7a5c14}.tag.pri{background:#f7e3ea;color:var(--primary)}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:16px}
+.stat{background:#fff;border:1px solid var(--line);border-top:3px solid var(--accent);border-radius:var(--radius);padding:12px 14px}
+.stat .v{font-size:26px;font-weight:bold;color:var(--primary)}
+.stat .l{color:var(--muted);font-size:12px}
+.stat.bad{border-top-color:var(--err)}.stat.bad .v{color:var(--err)}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.field{display:flex;flex-direction:column;gap:4px;margin-bottom:10px}
+.field label{font-size:12px;color:var(--muted)}
+.field input,.field select,.field textarea,input.inp,select.inp{border:1px solid var(--line);border-radius:6px;padding:6px 8px;background:#fff}
+.field textarea{min-height:70px;resize:vertical}
+.hint{font-size:12px;color:var(--muted);margin:2px 0 8px}
+.empty{text-align:center;color:var(--muted);padding:30px}
+.warnbox{background:#fff4e0;border:1px solid #f0cf99;color:#7a4a00;border-radius:8px;padding:8px 12px;margin:8px 0}
+.errbox{background:#fdecea;border:1px solid #e9b4b4;color:var(--err);border-radius:8px;padding:8px 12px;margin:8px 0}
+.okbox{background:#e6f4ea;border:1px solid #b9dcbf;color:var(--ok);border-radius:8px;padding:8px 12px;margin:8px 0}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:16px}
+table.kv{border-collapse:collapse;width:100%}
+table.kv th{width:130px;text-align:left;color:var(--muted);font-weight:normal;padding:4px 8px 4px 0;vertical-align:top}
+table.kv td{padding:4px 0;word-break:break-all}
+.mono{font-family:Consolas,monospace;font-size:12px}
+.help h3{margin-top:18px}.help li{margin:4px 0}.help table{border-collapse:collapse;margin:8px 0}.help td,.help th{border:1px solid var(--line);padding:5px 9px;text-align:left}.help th{background:#faf7f2}
+/* modal */
+.mask{position:fixed;inset:0;background:#0006;display:flex;align-items:center;justify-content:center;z-index:100}
+.modal{background:#fff;border-radius:var(--radius);width:min(600px,94vw);max-height:90vh;display:flex;flex-direction:column;box-shadow:0 10px 40px #0005}
+.modal header{padding:12px 16px;border-bottom:1px solid var(--line);font-weight:bold;color:var(--primary);display:flex}
+.modal header .x{margin-left:auto;cursor:pointer;border:0;background:none;font-size:18px}
+.modal .body{padding:16px;overflow:auto}
+.modal footer{padding:10px 16px;border-top:1px solid var(--line);display:flex;justify-content:flex-end;gap:8px}
+#toast{position:fixed;right:18px;bottom:18px;display:flex;flex-direction:column;gap:8px;z-index:200}
+#toast div{background:#333;color:#fff;padding:9px 14px;border-radius:6px;box-shadow:0 3px 10px #0004;animation:fi .2s;max-width:420px}
+#toast div.err{background:var(--err)}#toast div.ok{background:var(--ok)}
+@keyframes fi{from{opacity:0;transform:translateY(8px)}}
+#print-area{display:none}
+@media (max-width:820px){
+  .layout{flex-direction:column}
+  nav.side{width:auto;display:flex;flex-wrap:wrap;border-right:0;border-bottom:1px solid var(--line);padding:4px}
+  nav.side .grp{display:none}
+  nav.side a{border-left:0;border-bottom:3px solid transparent;padding:6px 10px}
+  nav.side a.on{border-bottom-color:var(--accent)}
+  main{padding:12px}
+}
+@media print{
+  body>*:not(#print-area){display:none!important}
+  #print-area{display:block;font-size:12px}
+  #print-area h1{color:var(--primary)}
+  #print-area h2{color:var(--primary);font-size:15px;margin:14px 0 6px}
+  #print-area table{width:100%;border-collapse:collapse;margin-bottom:8px}
+  #print-area td,#print-area th{border:1px solid #999;padding:3px 5px;text-align:left}
+  #print-area th{background:#f3e9ec}
+  #print-area .num{text-align:right}
+  @page{size:A4;margin:14mm}
+}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <h1>🧪 佐證抽樣實驗室<small>V3</small></h1>
+  <span class="sp"></span>
+  <button class="btn" id="tb-import">⤒ 匯入</button>
+  <button class="btn" id="tb-export">⤓ 匯出</button>
+  <button class="btn" id="tb-print">🖨 報告</button>
+</div>
+<div class="layout">
+  <nav class="side" id="nav"></nav>
+  <main id="app"><div class="empty">載入中…</div></main>
+</div>
+<div id="toast"></div>
+<div id="print-area"></div>
+<input type="file" id="file-import" accept=".json,application/json" hidden>
+<script>
+'use strict';
+/* =====================================================================
+ * 0. 設定區（沿用 V1／V2 的資料庫名稱與版本，舊資料可直接在 V3 使用）
+ * ===================================================================*/
+const APP = { name: '佐證抽樣實驗室', dbName: 'bot-sample-lab', dbVersion: 1, filePrefix: '佐證抽樣實驗室' };
+const SCHEMA = {
+  meta:        { keyPath: 'key' },
+  populations: { keyPath: 'id', indexes: { byPeriod: 'period', byCreated: 'createdAt' } },
+  popRows:     { keyPath: 'id', indexes: { byPop: 'popId', byPopKey: ['popId', 'key'] } },
+  plans:       { keyPath: 'id', indexes: { byPop: 'popId' } },
+  runs:        { keyPath: 'id', indexes: { byPlan: 'planId', byPop: 'popId' } },
+  samples:     { keyPath: 'id', indexes: { byRun: 'runId', byStatus: 'status', byRunRole: ['runId', 'role'] } },
+  attachments: { keyPath: 'id', indexes: { bySample: 'sampleId' } }
+};
+const DATA_STORES = ['populations', 'popRows', 'plans', 'runs', 'samples', 'attachments'];
+const METHODS = { srs: '簡單隨機', sys: '系統抽樣', strat: '分層抽樣', mus: '金額單位抽樣（MUS）', risk: '風險加權隨機', keyplus: '高額全查＋其餘抽樣' };
+const ALLOC = { prop: '比例配置', equal: '等額配置', neyman: 'Neyman 配置（依金額標準差）' };
+const METHOD_DESC = {
+  srs: '以種子亂數對母體做 Fisher–Yates 洗牌，取前 n 筆為正選，接著 m 筆為預備。每筆被抽中的機率相同。',
+  sys: '母體先依鍵值排序（確保可重現），間距 k = N / n，以亂數決定起點，之後每隔 k 筆抽一筆；預備樣本由未入選項目以簡單隨機抽出。',
+  strat: '依「分層」欄位分組，依配置方式（比例／等額／Neyman）決定各層樣本數，每層設有最低抽樣數；小數以最大餘數法分配，層內再以簡單隨機抽取。',
+  mus: '依累計金額抽樣，間距 J = 金額總額 / n；金額大於或等於 J 的項目自動列為全查，並重新計算剩餘間距，其餘以隨機起點每隔 J 取一個命中點。金額以絕對值計算，金額為 0 的項目不會被抽中。',
+  risk: '採 Efraimidis–Spirakis 加權隨機抽樣：每筆計算 u^(1/w)（u 為 0–1 亂數、w 為風險權重），取最大的 n 筆，風險愈高愈容易入選。',
+  keyplus: '金額大於或等於門檻的項目全部檢查（全查），其餘項目再套用所選的抽樣方法抽出 n 筆（此處 n 為「其餘項目」的抽樣數）。'
+};
+const ST_ORDER = ['待調閱', '已取得', '已查核', '無法取得', '已替補', '備用'];
+
+/* =====================================================================
+ * 1. IndexedDB 封裝
+ * ===================================================================*/
+const DB = {
+  db: null,
+  open() {
+    return new Promise((res, rej) => {
+      if (!('indexedDB' in window)) return rej(new Error('此瀏覽器不支援 IndexedDB'));
+      const rq = indexedDB.open(APP.dbName, APP.dbVersion);
+      rq.onupgradeneeded = () => {
+        const db = rq.result, tx = rq.transaction;
+        for (const [name, def] of Object.entries(SCHEMA)) {
+          const os = db.objectStoreNames.contains(name) ? tx.objectStore(name) : db.createObjectStore(name, { keyPath: def.keyPath });
+          for (const [ix, path] of Object.entries(def.indexes || {})) if (!os.indexNames.contains(ix)) os.createIndex(ix, path);
+        }
+      };
+      rq.onsuccess = () => { this.db = rq.result; this.db.onversionchange = () => { this.db.close(); toast('資料庫已在其他分頁更新，請重新整理', 'err'); }; res(this.db); };
+      rq.onerror = () => rej(rq.error);
+      rq.onblocked = () => toast('請關閉本工具的其他分頁後重新整理', 'err');
+    });
+  },
+  _p: rq => new Promise((res, rej) => { rq.onsuccess = () => res(rq.result); rq.onerror = () => rej(rq.error); }),
+  store(name, mode = 'readonly') { return this.db.transaction(name, mode).objectStore(name); },
+  get(s, k)         { return this._p(this.store(s).get(k)); },
+  all(s)            { return this._p(this.store(s).getAll()); },
+  byIndex(s, ix, v) { return this._p(this.store(s).index(ix).getAll(v)); },
+  count(s)          { return this._p(this.store(s).count()); },
+  put(s, v)         { return this._p(this.store(s, 'readwrite').put(v)); },
+  del(s, k)         { return this._p(this.store(s, 'readwrite').delete(k)); },
+  clear(s)          { return this._p(this.store(s, 'readwrite').clear()); },
+  countBy(s, ix) {
+    return new Promise((res, rej) => {
+      const out = {}, rq = this.store(s).index(ix).openKeyCursor();
+      rq.onsuccess = () => { const c = rq.result; if (!c) return res(out); out[c.key] = (out[c.key] || 0) + 1; c.continue(); };
+      rq.onerror = () => rej(rq.error);
+    });
+  },
+  tx(stores, fn) {
+    return new Promise((res, rej) => {
+      const t = this.db.transaction(stores, 'readwrite');
+      let out; try { out = fn(t); } catch (e) { t.abort(); return rej(e); }
+      t.oncomplete = () => res(out); t.onerror = () => rej(t.error); t.onabort = () => rej(t.error || new Error('交易中止'));
+    });
+  },
+  async putMany(s, arr) { return this.tx([s], t => { const os = t.objectStore(s); arr.forEach(v => os.put(v)); }); }
+};
+const Meta = {
+  async get(k, d = null) { const r = await DB.get('meta', k); return r ? r.value : d; },
+  set(k, v) { return DB.put('meta', { key: k, value: v }); }
+};
+
+/* =====================================================================
+ * 2. 共用工具
+ * ===================================================================*/
+const $ = (s, el = document) => el.querySelector(s);
+let _uc = 0;
+const uid = () => Date.now().toString(36) + (++_uc).toString(36) + Math.random().toString(36).slice(2, 7);
+const now = () => new Date().toISOString();
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const fmtN = (n, d = 0) => (n == null || n === '' || isNaN(n)) ? '' : Number(n).toLocaleString('zh-TW', { minimumFractionDigits: d, maximumFractionDigits: d });
+const fmtD = iso => iso ? new Date(iso).toLocaleString('zh-TW', { hourCycle: 'h23' }) : '';
+const fmtP = (x, d = 1) => (x == null || isNaN(x)) ? '' : (x * 100).toFixed(d) + '%';
+const today = () => { const d = new Date(); return `${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, '0')}${String(d.getDate()).padStart(2, '0')}`; };
+const isoDate = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+const todayISO = () => isoDate(new Date());
+const addDays = (n, from = new Date()) => { const d = new Date(from); d.setDate(d.getDate() + n); return isoDate(d); };
+const daysBetween = (a, b) => Math.round((new Date(b) - new Date(a)) / 86400000);
+const safeName = s => String(s).replace(/[\\/:*?"<>|]/g, '_');
+const sum = a => a.reduce((s, x) => s + x, 0);
+const maxOf = a => a.length ? a.reduce((m, x) => x > m ? x : m, -Infinity) : 0;
+const minOf = a => a.length ? a.reduce((m, x) => x < m ? x : m, Infinity) : 0;
+const stdev = a => { if (a.length < 2) return 0; const m = sum(a) / a.length; return Math.sqrt(sum(a.map(x => (x - m) ** 2)) / (a.length - 1)); };
+const median = a => { if (!a.length) return 0; const s = a.slice().sort((x, y) => x - y), m = s.length >> 1; return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2; };
+const sv = v => { const s = String(v ?? '').trim(); return s || '(空白)'; };
+function groupBy(rows, f) { const m = new Map(); rows.forEach(r => { const k = f(r); if (!m.has(k)) m.set(k, []); m.get(k).push(r); }); return m; }
+function toast(msg, type = '') {
+  const d = document.createElement('div'); d.className = type; d.textContent = msg;
+  $('#toast').appendChild(d); setTimeout(() => d.remove(), type === 'err' ? 5000 : 2500);
+}
+function modal({ title, body, ok = '確定', cancel = '取消', onOk, wide }) {
+  return new Promise(resolve => {
+    const m = document.createElement('div'); m.className = 'mask';
+    m.innerHTML = `<div class="modal" style="${wide ? 'width:min(920px,96vw)' : ''}"><header>${esc(title)}<button class="x" title="關閉 (Esc)">✕</button></header>
+      <div class="body"></div><footer>${cancel ? `<button class="btn" data-c>${esc(cancel)}</button>` : ''}<button class="btn pri" data-o>${esc(ok)}</button></footer></div>`;
+    const b = $('.body', m); typeof body === 'string' ? (b.innerHTML = body) : b.appendChild(body);
+    const close = v => { document.removeEventListener('keydown', onKey); m.remove(); resolve(v); };
+    const onKey = e => { if (e.key === 'Escape' && m === [...document.querySelectorAll('.mask')].pop()) close(false); };
+    document.addEventListener('keydown', onKey);
+    $('.x', m).onclick = () => close(false);
+    const c = $('[data-c]', m); if (c) c.onclick = () => close(false);
+    const ob = $('[data-o]', m);
+    ob.onclick = async () => {
+      if (ob.disabled) return; ob.disabled = true;
+      try { if (onOk && (await onOk(b)) === false) { ob.disabled = false; return; } close(true); }
+      catch (e) { ob.disabled = false; console.error(e); toast(e.message || String(e), 'err'); }
+    };
+    document.body.appendChild(m);
+    const f = $('input,select,textarea', b); if (f) f.focus();
+  });
+}
+const confirmBox = (msg, ok = '確定') => modal({ title: '確認', body: `<p>${esc(msg)}</p>`, ok });
+function download(name, content, mime = 'application/octet-stream') {
+  const blob = content instanceof Blob ? content : new Blob([content], { type: mime });
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = safeName(name);
+  document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+}
+// CSV 公式注入防護：以 = + - @ 開頭的文字（非純數字）前面補單引號，避免 Excel 當公式執行
+function toCSV(rows, cols) {
+  const q = v => {
+    v = String(v ?? '');
+    if (/^[=+\-@\t\r]/.test(v) && !/^[-+]?\d+(\.\d+)?([eE][-+]?\d+)?$/.test(v)) v = "'" + v;
+    return /[",\n\r]/.test(v) ? `"${v.replace(/"/g, '""')}"` : v;
+  };
+  return '\uFEFF' + [cols.map(c => q(c.label)).join(','), ...rows.map(r => cols.map(c => q(typeof c.get === 'function' ? c.get(r) : r[c.key])).join(','))].join('\r\n');
+}
+function toExcelXML(sheets) {
+  // 移除 XML 1.0 不允許的控制字元，否則含不可見字元的資料會讓 Excel 無法開啟
+  const x = s => esc(String(s ?? '').replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, '')).replace(/\n/g, '&#10;');
+  const cell = v => (typeof v === 'number' && isFinite(v)) ? `<Cell><Data ss:Type="Number">${v}</Data></Cell>` : `<Cell><Data ss:Type="String">${x(v ?? '')}</Data></Cell>`;
+  const ws = sheets.map(s => `<Worksheet ss:Name="${x(String(s.name).replace(/[\\/?*\[\]:]/g, '_').slice(0, 31))}"><Table>
+<Row>${s.cols.map(c => `<Cell ss:StyleID="h"><Data ss:Type="String">${x(c.label)}</Data></Cell>`).join('')}</Row>
+${s.rows.map(r => `<Row>${s.cols.map(c => cell(typeof c.get === 'function' ? c.get(r) : r[c.key])).join('')}</Row>`).join('\n')}
+</Table></Worksheet>`).join('\n');
+  return `<?xml version="1.0" encoding="UTF-8"?><?mso-application progid="Excel.Sheet"?>
+<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">
+<Styles><Style ss:ID="h"><Font ss:Bold="1" ss:Color="#FFFFFF"/><Interior ss:Color="#8A1538" ss:Pattern="Solid"/></Style></Styles>
+${ws}</Workbook>`;
+}
+const blobToB64 = b => new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result); r.onerror = rej; r.readAsDataURL(b); });
+const b64ToBlob = d => { const [h, b] = d.split(','), bin = atob(b), u = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i); return new Blob([u], { type: (h.match(/data:([^;]*)/) || [])[1] || '' }); };
+const readTextSmart = f => new Promise((res, rej) => {
+  const r = new FileReader();
+  r.onload = () => {
+    const buf = r.result;
+    try { res(new TextDecoder('utf-8', { fatal: true }).decode(buf)); }
+    catch { try { res(new TextDecoder('big5').decode(buf)); } catch (e) { rej(e); } }
+  };
+  r.onerror = rej; r.readAsArrayBuffer(f);
+});
+const readText = f => new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result); r.onerror = rej; r.readAsText(f, 'utf-8'); });
+function barChart(data, { width = 560, barH = 22, color = 'var(--primary)', fmt = v => fmtN(v) } = {}) {
+  if (!data.length) return '<div class="empty">無資料</div>';
+  const max = Math.max(...data.map(d => Math.abs(d.value)), 1), lw = 120, h = data.length * (barH + 8) + 8;
+  return `<svg viewBox="0 0 ${width} ${h}" width="100%" style="max-width:${width}px">${data.map((d, i) => {
+    const y = 8 + i * (barH + 8), w = (width - lw - 70) * Math.abs(d.value) / max;
+    return `<text x="${lw - 6}" y="${y + barH * .7}" text-anchor="end" font-size="12">${esc(String(d.label).slice(0, 10))}</text>
+      <rect x="${lw}" y="${y}" width="${w}" height="${barH}" rx="3" fill="${d.color || color}"><title>${esc(d.label)}：${esc(fmt(d.value))}</title></rect>
+      <text x="${lw + w + 6}" y="${y + barH * .7}" font-size="12">${esc(fmt(d.value))}</text>`;
+  }).join('')}</svg>`;
+}
+
+/* =====================================================================
+ * 3. 密碼學／亂數：SHA-256、xmur3、mulberry32
+ * ===================================================================*/
+const sha256 = (() => {
+  const primes = []; for (let n = 2; primes.length < 64; n++) { let p = true; for (let d = 2; d * d <= n; d++) if (n % d === 0) { p = false; break; } if (p) primes.push(n); }
+  const frac = x => x - Math.floor(x);
+  const K = primes.map(p => Math.floor(frac(Math.cbrt(p)) * 4294967296) >>> 0);
+  const H0 = primes.slice(0, 8).map(p => Math.floor(frac(Math.sqrt(p)) * 4294967296) >>> 0);
+  const rotr = (x, n) => (x >>> n) | (x << (32 - n));
+  return str => {
+    const bytes = new TextEncoder().encode(str), l = bytes.length, total = ((l + 9 + 63) >> 6) << 6, buf = new Uint8Array(total);
+    buf.set(bytes); buf[l] = 0x80;
+    const dv = new DataView(buf.buffer); dv.setUint32(total - 8, Math.floor(l / 0x20000000)); dv.setUint32(total - 4, (l << 3) >>> 0);
+    const h = H0.slice(), w = new Uint32Array(64);
+    for (let o = 0; o < total; o += 64) {
+      for (let i = 0; i < 16; i++) w[i] = dv.getUint32(o + i * 4);
+      for (let i = 16; i < 64; i++) { const a = w[i - 15], b = w[i - 2]; w[i] = (w[i - 16] + (rotr(a, 7) ^ rotr(a, 18) ^ (a >>> 3)) + w[i - 7] + (rotr(b, 17) ^ rotr(b, 19) ^ (b >>> 10))) >>> 0; }
+      let [a, b, c, d, e, f, g, hh] = h;
+      for (let i = 0; i < 64; i++) {
+        const t1 = (hh + (rotr(e, 6) ^ rotr(e, 11) ^ rotr(e, 25)) + ((e & f) ^ (~e & g)) + K[i] + w[i]) >>> 0;
+        const t2 = ((rotr(a, 2) ^ rotr(a, 13) ^ rotr(a, 22)) + ((a & b) ^ (a & c) ^ (b & c))) >>> 0;
+        hh = g; g = f; f = e; e = (d + t1) >>> 0; d = c; c = b; b = a; a = (t1 + t2) >>> 0;
+      }
+      [a, b, c, d, e, f, g, hh].forEach((v, i) => h[i] = (h[i] + v) >>> 0);
+    }
+    return h.map(x => x.toString(16).padStart(8, '0')).join('');
+  };
+})();
+function xmur3(str) {
+  let h = 1779033703 ^ str.length;
+  for (let i = 0; i < str.length; i++) { h = Math.imul(h ^ str.charCodeAt(i), 3432918353); h = h << 13 | h >>> 19; }
+  return () => { h = Math.imul(h ^ h >>> 16, 2246822507); h = Math.imul(h ^ h >>> 13, 3266489909); return (h ^= h >>> 16) >>> 0; };
+}
+function mulberry32(a) {
+  return () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
+}
+const makeRng = (seed, tag = '') => mulberry32(xmur3(String(seed) + '|' + tag)());
+function shuffle(arr, rng) { const a = arr.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(rng() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+const popFingerprint = rows => sha256(rows.map(r => r.key + '\t' + r.amount).sort().join('\n'));
+
+/* =====================================================================
+ * 4. 抽樣演算法
+ * ===================================================================*/
+const defaultParams = () => ({
+  allocation: 'prop', minPerStratum: 1, keyItemThreshold: 0, baseMethod: 'srs',
+  riskWeights: { 高: 5, 中: 2, 低: 1 }, highRiskWeight: 5,
+  confidence: 0.95, tolerableRate: 0.05, tolerableMisstatement: 0
+});
+const canon = rows => rows.slice().sort((a, b) => a.key < b.key ? -1 : a.key > b.key ? 1 : a.rowNo - b.rowNo);
+function weightOf(row, rw) {
+  const k = String(row.risk ?? '').trim();
+  if (k && rw && Object.prototype.hasOwnProperty.call(rw, k)) return +rw[k];
+  const n = parseFloat(k); return isFinite(n) && k !== '' ? n : 1;
+}
+const parseWeights = txt => { const o = {}; String(txt || '').split(/[,，;；\n]/).forEach(p => { const m = p.split(/[=:：]/); if (m.length === 2 && m[0].trim() && isFinite(parseFloat(m[1]))) o[m[0].trim()] = parseFloat(m[1]); }); return o; };
+const weightsText = rw => Object.entries(rw || {}).map(([k, v]) => `${k}=${v}`).join(',');
+
+function allocate(groups, n, mode, minPer) {
+  const w = groups.map(g => mode === 'equal' ? 1 : mode === 'neyman' ? g.N * g.S : g.N);
+  const alloc = groups.map(g => Math.min(g.cap, minPer));
+  let remain = n - sum(alloc), active = groups.map((_, i) => i).filter(i => alloc[i] < groups[i].cap);
+  while (remain > 0 && active.length) {
+    const tw = sum(active.map(i => w[i]));
+    const raw = active.map(i => remain * (tw > 0 ? w[i] / tw : 1 / active.length));
+    const fl = raw.map(Math.floor); let left = remain - sum(fl);
+    active.map((i, j) => ({ j, f: raw[j] - fl[j] })).sort((a, b) => b.f - a.f || a.j - b.j).slice(0, left).forEach(o => fl[o.j]++);
+    let used = 0;
+    active.forEach((i, j) => { const add = Math.min(fl[j], groups[i].cap - alloc[i]); alloc[i] += add; used += add; });
+    remain -= used; active = active.filter(i => alloc[i] < groups[i].cap);
+    if (used === 0) break;
+  }
+  return alloc;
+}
+const mk = (row, role, reason) => ({ row, role, reason });
+
+function sSRS(rows, n, m, seed, tag) {
+  n = Math.min(n, rows.length);
+  const sh = shuffle(rows, makeRng(seed, 'srs' + tag)), mm = Math.min(m, rows.length - n);
+  return {
+    main: sh.slice(0, n).map((r, i) => mk(r, '正選', `簡單隨機：洗牌後第 ${i + 1} 筆`)),
+    reserve: sh.slice(n, n + mm).map((r, i) => mk(r, '預備', `預備第 ${i + 1} 順位（簡單隨機洗牌後第 ${n + i + 1} 筆）`)),
+    info: [`簡單隨機（Fisher–Yates 洗牌）：母體 ${rows.length} 筆，抽 ${n} 筆`]
+  };
+}
+function sSys(rows, n, m, seed, tag) {
+  const N = rows.length; n = Math.min(n, N);
+  const k = N / n, start = makeRng(seed, 'sys' + tag)() * k, idx = new Set();
+  const main = [];
+  for (let i = 0; i < n; i++) { const j = Math.min(N - 1, Math.floor(start + i * k)); idx.add(j); main.push(mk(rows[j], '正選', `系統抽樣：間距 k=${k.toFixed(2)}、起點 ${start.toFixed(2)}，第 ${i + 1} 次命中（母體順位 ${j + 1}）`)); }
+  const rest = shuffle(rows.filter((_, j) => !idx.has(j)), makeRng(seed, 'sysres' + tag)), mm = Math.min(m, rest.length);
+  return {
+    main, reserve: rest.slice(0, mm).map((r, i) => mk(r, '預備', `預備第 ${i + 1} 順位（未入選項目簡單隨機）`)),
+    info: [`系統抽樣：N=${N}、n=${n}，間距 k=${k.toFixed(4)}，隨機起點 ${start.toFixed(4)}（母體依鍵值排序）`]
+  };
+}
+function sStrat(rows, n, m, seed, p, tag) {
+  const g = groupBy(rows, r => sv(r.stratum)), names = [...g.keys()].sort();
+  const groups = names.map(nm => { const a = g.get(nm); return { name: nm, rows: a, N: a.length, S: stdev(a.map(r => r.amount)), amount: sum(a.map(r => r.amount)), cap: a.length }; });
+  const alloc = allocate(groups, n, p.allocation, Math.max(0, +p.minPerStratum || 0));
+  const left = groups.map((x, i) => ({ ...x, cap: x.N - alloc[i] }));
+  const mm = Math.min(m, sum(left.map(x => x.cap))), ra = allocate(left, mm, 'prop', 0);
+  const main = [], reserve = [];
+  groups.forEach((x, i) => {
+    const sh = shuffle(x.rows, makeRng(seed, 'strat' + tag + '|' + x.name));
+    sh.slice(0, alloc[i]).forEach((r, j) => main.push(mk(r, '正選', `分層抽樣（${ALLOC[p.allocation] || p.allocation}）：「${x.name}」層母體 ${x.N} 筆，配置 ${alloc[i]} 筆，層內隨機第 ${j + 1}`)));
+    sh.slice(alloc[i], alloc[i] + ra[i]).forEach((r, j) => reserve.push(mk(r, '預備', `預備（「${x.name}」層第 ${j + 1} 順位）`)));
+  });
+  return {
+    main, reserve,
+    info: [`分層抽樣：${ALLOC[p.allocation] || p.allocation}、每層最低 ${p.minPerStratum} 筆、共 ${groups.length} 層，正選合計 ${main.length} 筆`],
+    strata: groups.map((x, i) => ({ name: x.name, N: x.N, amount: x.amount, S: x.S, alloc: alloc[i] }))
+  };
+}
+function sMUS(rows, n, m, seed, tag, warnings) {
+  const A = r => Math.abs(r.amount);
+  let pool = rows.filter(r => A(r) > 0), k = n, J = 0;
+  const zero = rows.length - pool.length;
+  if (zero > 0) warnings.push(`有 ${zero} 筆金額為 0，金額單位抽樣不會抽中這些項目`);
+  const J0 = pool.length ? sum(pool.map(A)) / n : 0, certain = [];
+  while (k > 0 && pool.length) {
+    J = sum(pool.map(A)) / k;
+    const big = pool.filter(r => A(r) >= J);
+    if (!big.length) break;
+    big.forEach(r => certain.push(r)); pool = pool.filter(r => A(r) < J); k -= big.length;
+  }
+  const main = certain.map(r => mk(r, '全查', `金額 ${fmtN(r.amount, 2)} ≥ 抽樣間距 J=${fmtN(J, 2)}，自動全查`));
+  const hits = new Set();
+  let start = 0;
+  if (k > 0 && pool.length) {
+    J = sum(pool.map(A)) / k; start = makeRng(seed, 'mus' + tag)() * J;
+    let cum = 0, i = 0;
+    for (const r of pool) {
+      cum += A(r);
+      while (i < k && start + i * J < cum) { main.push(mk(r, '正選', `金額單位抽樣：累計金額命中點 ${fmtN(start + i * J, 2)}（間距 J=${fmtN(J, 2)}、起點 ${fmtN(start, 2)}）`)); hits.add(r); i++; }
+    }
+    if (hits.size < k) warnings.push(`金額單位抽樣只命中 ${hits.size} 筆，少於應抽的 ${k} 筆`);
+  }
+  const rng = makeRng(seed, 'musres' + tag);
+  const rest = pool.filter(r => !hits.has(r)).map(r => ({ r, key: Math.log(rng() || 1e-12) / A(r) })).sort((a, b) => b.key - a.key).slice(0, m);
+  return {
+    main, reserve: rest.map((o, i) => mk(o.r, '預備', `預備第 ${i + 1} 順位（金額加權隨機）`)),
+    info: [`金額單位抽樣：金額總額 ${fmtN(sum(rows.map(A)), 2)}，初始間距 ${fmtN(J0, 2)}；自動全查 ${certain.length} 筆，隨機命中 ${hits.size} 筆，最終間距 J=${fmtN(J, 2)}`]
+  };
+}
+function sRisk(rows, n, m, seed, p, tag) {
+  n = Math.min(n, rows.length);
+  const rng = makeRng(seed, 'risk' + tag), rw = p.riskWeights;
+  const ranked = rows.map(r => { const w = weightOf(r, rw), u = rng() || 1e-12; return { r, w, key: w > 0 ? Math.log(u) / w : -Infinity }; })
+    .filter(o => o.key > -Infinity).sort((a, b) => b.key - a.key);
+  const mk2 = (o, i, role) => mk(o.r, role, role === '正選'
+    ? `風險加權隨機：風險「${sv(o.r.risk)}」權重 ${o.w}，加權排名第 ${i + 1}`
+    : `預備第 ${i - n + 1} 順位（風險「${sv(o.r.risk)}」權重 ${o.w}，加權排名第 ${i + 1}）`);
+  return {
+    main: ranked.slice(0, n).map((o, i) => mk2(o, i, '正選')),
+    reserve: ranked.slice(n, n + m).map((o, i) => mk2(o, i + n, '預備')),
+    info: [`風險加權隨機（Efraimidis–Spirakis）：權重 ${weightsText(rw) || '（無）'}；未列入的標籤權重為 1，權重 ≤ 0 者不參與抽樣`]
+  };
+}
+function sKey(rows, n, m, seed, p, warnings) {
+  const th = Math.abs(+p.keyItemThreshold || 0);
+  const keys = th > 0 ? rows.filter(r => Math.abs(r.amount) >= th) : [], rest = th > 0 ? rows.filter(r => Math.abs(r.amount) < th) : rows;
+  const base = ['srs', 'sys', 'strat', 'mus', 'risk'].includes(p.baseMethod) ? p.baseMethod : 'srs';
+  if (th <= 0) warnings.push('未設定全查門檻，本次沒有全查項目');
+  const nn = Math.min(n, rest.length);
+  if (nn < n) warnings.push(`剔除全查項目後僅剩 ${rest.length} 筆，其餘抽樣數調整為 ${nn}`);
+  const r = selectBy(base, rest, nn, m, seed, p, warnings, 'k');
+  return {
+    main: [...keys.map(x => mk(x, '全查', `金額 ${fmtN(x.amount, 2)} ≥ 全查門檻 ${fmtN(th, 2)}`)), ...r.main],
+    reserve: r.reserve,
+    info: [`高額全查：門檻 ${fmtN(th, 2)}，全查 ${keys.length} 筆；其餘 ${rest.length} 筆採「${METHODS[base]}」抽 ${nn} 筆`, ...r.info],
+    strata: r.strata
+  };
+}
+function selectBy(method, rows, n, m, seed, p, warnings, tag) {
+  if (!rows.length || n <= 0) return { main: [], reserve: [], info: ['無可抽樣的項目'] };
+  switch (method) {
+    case 'srs': return sSRS(rows, n, m, seed, tag);
+    case 'sys': return sSys(rows, n, m, seed, tag);
+    case 'strat': return sStrat(rows, n, m, seed, p, tag);
+    case 'mus': return sMUS(rows, n, m, seed, tag, warnings);
+    case 'risk': return sRisk(rows, n, m, seed, p, tag);
+    case 'keyplus': return sKey(rows, n, m, seed, p, warnings);
+  }
+  throw new Error('未知的抽樣方法：' + method);
+}
+function execPlan(plan, rowsIn) {
+  const p = { ...defaultParams(), ...(plan.params || {}) }, rows = canon(rowsIn), N = rows.length, warnings = [];
+  let n = Math.max(1, Math.floor(+plan.n || 1)); const m = Math.max(0, Math.floor(+plan.m || 0));
+  if (!N) throw new Error('母體沒有資料');
+  if (!String(plan.seed ?? '').trim()) throw new Error('請設定種子');
+  if (plan.method !== 'keyplus' && n > N) { warnings.push(`樣本數 ${n} 大於母體 ${N} 筆，已調整為 ${N}`); n = N; }
+  const res = selectBy(plan.method, rows, n, m, String(plan.seed), p, warnings, '');
+  if (plan.method !== 'keyplus' && plan.method !== 'strat' && res.main.length < n) warnings.push(`實際只抽出 ${res.main.length} 筆，少於設定的 ${n} 筆（可能因可抽項目不足、金額為 0 或權重 ≤ 0）`);
+  res.warnings = warnings;
+  const seen = new Set();
+  [...res.main, ...res.reserve].forEach(x => { if (seen.has(x.row.id)) throw new Error('內部錯誤：同一筆被重複抽中 ' + x.row.key); seen.add(x.row.id); });
+  return res;
+}
+const attrSampleSize = (conf, rate) => Math.ceil(Math.log(1 - conf) / Math.log(1 - rate));
+const confFactor = conf => ({ 0.9: 2.31, 0.95: 3.0, 0.99: 4.61 })[conf] ?? Math.round(-Math.log(1 - conf) * 100) / 100;
+const musSampleSize = (total, factor, tol) => Math.ceil(total * factor / tol);
+
+/* =====================================================================
+ * 5. 路由、選取狀態與共用元件
+ * ===================================================================*/
+const State = { page: 'dash', popId: null, planId: null, runId: null, mapAxis: 'unit', mapMetric: 'count', trackFilter: '', tok: 0, rendered: null };
+const PAGES = [
+  { grp: '工作台' },
+  { id: 'dash', title: '📊 總覽', render: renderDash },
+  { id: 'pop', title: '🗂️ 母體管理', render: renderPop },
+  { id: 'plan', title: '🧮 抽樣計畫', render: renderPlan },
+  { id: 'run', title: '🎲 執行與結果', render: renderRun },
+  { id: 'map', title: '🗺️ 覆蓋地圖', render: renderMap },
+  { id: 'track', title: '📎 佐證追蹤', render: renderTrack },
+  { grp: '系統' },
+  { id: 'data', title: '💾 資料管理', render: renderData },
+  { id: 'help', title: '📖 使用說明', render: renderHelp }
+];
+function renderNav() {
+  $('#nav').innerHTML = PAGES.map(p => p.grp ? `<div class="grp">${esc(p.grp)}</div>` : `<a href="#${p.id}" class="${p.id === State.page ? 'on' : ''}">${esc(p.title)}</a>`).join('');
+}
+// 先渲染到離線容器，確認仍是最新一次導覽才換上畫面；同頁重繪保留捲動位置
+async function go(id) {
+  const p = PAGES.find(x => x.id === id) || PAGES.find(x => x.id);
+  const tok = ++State.tok, samePage = State.rendered === p.id, y = window.scrollY;
+  State.page = p.id; renderNav(); Meta.set('lastPage', p.id);
+  const box = document.createElement('div');
+  try { await p.render(box); } catch (e) { console.error(e); box.innerHTML = `<div class="card"><h2>發生錯誤</h2><pre>${esc(e.stack || e)}</pre></div>`; }
+  if (tok !== State.tok) return;
+  $('#app').replaceChildren(...box.childNodes); State.rendered = p.id;
+  window.scrollTo(0, samePage ? y : 0);
+}
+window.addEventListener('hashchange', () => go(location.hash.slice(1)));
+const refresh = () => go(State.page);
+const sortDesc = (a, b) => String(b.createdAt).localeCompare(String(a.createdAt));
+
+/** 讀取並校正目前選取的 母體／計畫／執行。needRun=true 時（覆蓋地圖、佐證追蹤、列印）找不到執行就退回最近一次 */
+async function syncSel(needRun = false) {
+  const pops = (await DB.all('populations')).sort(sortDesc);
+  if (!pops.find(p => p.id === State.popId)) { State.popId = pops[0]?.id || null; State.planId = null; State.runId = null; }
+  const plans = State.popId ? (await DB.byIndex('plans', 'byPop', State.popId)).sort(sortDesc) : [];
+  const runs = State.popId ? (await DB.byIndex('runs', 'byPop', State.popId)).sort(sortDesc) : [];
+  if (!plans.find(p => p.id === State.planId)) { State.planId = plans[0]?.id || null; State.runId = null; }
+  if (!runs.find(r => r.id === State.runId) && (State.runId !== '' || needRun)) State.runId = (runs.find(r => r.planId === State.planId) || runs[0])?.id || null;
+  const cur = runs.find(r => r.id === State.runId); if (cur) State.planId = cur.planId;
+  Meta.set('sel', { popId: State.popId, planId: State.planId, runId: State.runId });
+  return { pops, plans, runs, pop: pops.find(p => p.id === State.popId), plan: plans.find(p => p.id === State.planId), run: runs.find(r => r.id === State.runId) };
+}
+function selBar(ctx, { plan = false, run = false, runScope = 'pop' } = {}) {
+  const o = (arr, id, f) => arr.map(x => `<option value="${esc(x.id)}" ${x.id === id ? 'selected' : ''}>${esc(f(x))}</option>`).join('');
+  const planName = id => ctx.plans.find(p => p.id === id)?.name || '';
+  const runs = runScope === 'plan' ? ctx.runs.filter(r => r.planId === State.planId) : ctx.runs;
+  return `<div class="card"><div class="row">
+    <div class="field"><label>母體</label><select id="s-pop">${o(ctx.pops, State.popId, p => `${p.name}（${fmtN(p.rowCount)} 筆）`)}</select></div>
+    ${plan ? `<div class="field"><label>抽樣計畫</label><select id="s-plan">${ctx.plans.length ? o(ctx.plans, State.planId, p => `${p.name}｜${METHODS[p.method]}`) : '<option value="">（尚無計畫）</option>'}</select></div>` : ''}
+    ${run ? `<div class="field"><label>抽樣執行</label><select id="s-run">${runs.length ? o(runs, State.runId, r => `${fmtD(r.createdAt)}｜${runScope === 'plan' ? '' : planName(r.planId) + '｜'}種子 ${r.seed}${r.locked ? ' 🔒' : ''}`) : '<option value="">（尚無執行紀錄）</option>'}</select></div>` : ''}
+  </div></div>`;
+}
+function bindSel(app) {
+  const pop = $('#s-pop', app), plan = $('#s-plan', app), run = $('#s-run', app);
+  if (pop) pop.onchange = () => { State.popId = pop.value; State.planId = null; State.runId = null; refresh(); };
+  if (plan) plan.onchange = async () => { State.planId = plan.value; const rs = (await DB.byIndex('runs', 'byPlan', plan.value)).sort(sortDesc); State.runId = rs[0]?.id || ''; refresh(); };
+  if (run) run.onchange = () => { State.runId = run.value; refresh(); };
+}
+function emptyPop(app, msg = '尚未建立母體。') {
+  app.innerHTML = `<div class="card empty">${esc(msg)}<br><br><button class="btn pri" onclick="location.hash='pop'">前往匯入母體</button> <button class="btn gold" id="e-sample">載入範例資料</button></div>`;
+  $('#e-sample', app).onclick = loadSample;
+}
+
+/* ---------- 通用列表（搜尋、欄位排序、CSV／Excel 匯出） ---------- */
+const GS = {};
+function mountGrid(host, cfg) {
+  const st = GS[cfg.id] || (GS[cfg.id] = { q: '', key: cfg.sortKey || null, dir: cfg.sortDir || 1, sel: new Set() });
+  const cols = cfg.cols, byId = new Map(cfg.rows.map(r => [r.id, r]));
+  const disp = (c, r) => c.get ? c.get(r) : r[c.key];
+  const text = (c, r) => { const v = disp(c, r); return c.num && typeof v === 'number' ? fmtN(v, c.dec || 0) : String(v ?? ''); };
+  host.innerHTML = `<div class="card"><h2>${esc(cfg.title)} <span class="tag" data-cnt></span><span class="sp"></span>${cfg.toolbar || ''}
+    <input class="inp" data-q placeholder="搜尋…" value="${esc(st.q)}">
+    <button class="btn" data-csv>CSV</button><button class="btn" data-xls>Excel</button></h2>
+    ${cfg.note ? `<div class="hint">${cfg.note}</div>` : ''}<div data-body></div></div>`;
+  const body = $('[data-body]', host), cnt = $('[data-cnt]', host);
+  const view = () => {
+    let rows = cfg.rows.slice(); const q = st.q.trim().toLowerCase();
+    if (q) rows = rows.filter(r => cols.some(c => String(c.search ? c.search(r) : disp(c, r) ?? '').toLowerCase().includes(q)));
+    const c = cols.find(c => c.key === st.key);
+    // [V3] 文字欄位改用「自然排序」：K2 排在 K10 之前
+    if (c) rows.sort((a, b) => { const x = c.sortVal ? c.sortVal(a) : disp(c, a), y = c.sortVal ? c.sortVal(b) : disp(c, b); return (typeof x === 'number' && typeof y === 'number' ? x - y : String(x ?? '').localeCompare(String(y ?? ''), 'zh-Hant', { numeric: true })) * st.dir; });
+    return rows;
+  };
+  const draw = () => {
+    const rows = view(), limit = cfg.limit || 200, show = rows.slice(0, limit);
+    cnt.textContent = rows.length === cfg.rows.length ? `${fmtN(rows.length)} 筆` : `${fmtN(rows.length)} / ${fmtN(cfg.rows.length)} 筆`;
+    if (!rows.length) { body.innerHTML = `<div class="empty">${esc(cfg.empty || '沒有資料')}</div>`; return; }
+    // [V3] 表頭「全選」勾選框會反映目前畫面是否已全選，因此可以再按一次取消全選
+    const allSel = show.length > 0 && show.every(r => st.sel.has(r.id));
+    body.innerHTML = `<div style="overflow:auto"><table class="grid"><thead><tr>${cfg.selectable ? `<th><input type="checkbox" data-all ${allSel ? 'checked' : ''}></th>` : ''}${cols.map(c => `<th data-sort="${esc(c.key)}" class="${c.num ? 'num' : ''}">${esc(c.label)}${st.key === c.key ? (st.dir > 0 ? ' ▲' : ' ▼') : ''}</th>`).join('')}${cfg.actions ? '<th></th>' : ''}</tr></thead>
+      <tbody>${show.map(r => `<tr data-id="${esc(r.id)}">${cfg.selectable ? `<td><input type="checkbox" data-sel="${esc(r.id)}" ${st.sel.has(r.id) ? 'checked' : ''}></td>` : ''}${cols.map(c => `<td class="${c.num ? 'num' : ''}">${c.html ? c.html(r) : esc(text(c, r))}</td>`).join('')}${cfg.actions ? `<td style="white-space:nowrap">${cfg.actions(r)}</td>` : ''}</tr>`).join('')}</tbody></table></div>
+      ${rows.length > limit ? `<div class="hint">僅顯示前 ${fmtN(limit)} 筆（符合 ${fmtN(rows.length)} 筆），匯出會包含全部符合的資料。</div>` : ''}`;
+    body.querySelectorAll('th[data-sort]').forEach(th => th.onclick = () => { const k = th.dataset.sort; st.dir = st.key === k ? -st.dir : 1; st.key = k; draw(); });
+    body.querySelectorAll('[data-a]').forEach(b => b.onclick = () => cfg.onAction(b.dataset.a, byId.get(b.closest('tr').dataset.id), b));
+    body.querySelectorAll('[data-sel]').forEach(cb => cb.onchange = () => { cb.checked ? st.sel.add(cb.dataset.sel) : st.sel.delete(cb.dataset.sel); const a = $('[data-all]', body); if (a) a.checked = show.every(r => st.sel.has(r.id)); });
+    const all = $('[data-all]', body); if (all) all.onchange = () => { show.forEach(r => all.checked ? st.sel.add(r.id) : st.sel.delete(r.id)); draw(); };
+  };
+  const qi = $('[data-q]', host); qi.oninput = () => { st.q = qi.value; clearTimeout(qi._t); qi._t = setTimeout(draw, 200); };
+  $('[data-csv]', host).onclick = () => download(`${APP.filePrefix}_${safeName(cfg.title)}_${today()}.csv`, toCSV(view(), cols), 'text/csv;charset=utf-8');
+  $('[data-xls]', host).onclick = () => download(`${APP.filePrefix}_${safeName(cfg.title)}_${today()}.xls`, toExcelXML([{ name: cfg.title, cols, rows: view() }]), 'application/vnd.ms-excel');
+  draw();
+  // selected() 只回傳「目前篩選後仍看得到」的勾選列，避免批次操作誤改已被篩選隱藏的樣本
+  return { st, selected: () => { const vis = new Set(view().map(r => r.id)); return cfg.rows.filter(r => st.sel.has(r.id) && vis.has(r.id)); }, redraw: draw };
+}
+
+/* =====================================================================
+ * 6. 共用：狀態標籤、刪除連鎖、覆蓋率
+ * ===================================================================*/
+const isActive = s => s.status !== '已替補' && !(s.role === '預備' && s.status === '備用');
+// 覆蓋率只計「實際拿得到佐證」的樣本：無法取得的樣本不算涵蓋
+const isCovered = s => isActive(s) && s.status !== '無法取得';
+const stText = s => s.status + (s.status === '已查核' && s.result ? '・' + s.result : '');
+const stTag = s => { const cls = { 待調閱: 'warn', 已取得: 'gold', 已查核: s.result === '異常' ? 'err' : 'ok', 無法取得: 'err' }[s.status] || ''; return `<span class="tag ${cls}">${esc(stText(s))}</span>`; };
+const roleTag = s => `<span class="tag ${s.role === '全查' ? 'pri' : s.role === '預備' ? '' : 'gold'}">${esc(s.role)}</span>`;
+// [V3] 替補關係文字（樣本清單、追蹤清單、Excel 底稿共用）
+const relText = (s, seqOf) => s.replaces ? `替補 #${seqOf.get(s.replaces)}` : s.replacedBy ? `→ 由 #${seqOf.get(s.replacedBy)} 替補` : '';
+// [V3] 「已啟用的預備樣本」（替補上場）視同正選母集合，列入正選樣本表
+const isMainList = s => s.role !== '預備' || !!s.replaces;
+const keysBy = (s, ix, v) => DB._p(DB.store(s).index(ix).getAllKeys(v));
+const attIdsFor = set => new Promise((res, rej) => {
+  const out = [], rq = DB.store('attachments').index('bySample').openKeyCursor();
+  rq.onsuccess = () => { const c = rq.result; if (!c) return res(out); if (set.has(c.key)) out.push(c.primaryKey); c.continue(); };
+  rq.onerror = () => rej(rq.error);
+});
+async function delRuns(runIds, extra) {
+  const sampleIds = []; for (const id of runIds) sampleIds.push(...await keysBy('samples', 'byRun', id));
+  const attIds = await attIdsFor(new Set(sampleIds));
+  await DB.tx(['runs', 'samples', 'attachments', 'populations', 'popRows', 'plans'], t => {
+    runIds.forEach(id => t.objectStore('runs').delete(id));
+    sampleIds.forEach(id => t.objectStore('samples').delete(id));
+    attIds.forEach(id => t.objectStore('attachments').delete(id));
+    if (extra) extra(t);
+  });
+}
+const absA = r => Math.abs(+r.amount || 0);
+function covData(rows, samples, run, axis) {
+  const P = run.paramsSnapshot?.params || defaultParams(), rw = P.riskWeights, hiW = +P.highRiskWeight || 5;
+  const colOf = r => axis === 'risk' ? sv(r.risk) : sv(r.unit);
+  const cnt = new Map(); rows.forEach(r => cnt.set(colOf(r), (cnt.get(colOf(r)) || 0) + 1));
+  const topCols = new Set([...cnt.entries()].sort((a, b) => b[1] - a[1]).slice(0, 12).map(e => e[0]));
+  const cn = r => { const c = colOf(r); return topCols.has(c) ? c : '其他'; };
+  const sc = new Map(); rows.forEach(r => sc.set(sv(r.stratum), (sc.get(sv(r.stratum)) || 0) + 1));
+  const topS = new Set([...sc.entries()].sort((a, b) => b[1] - a[1]).slice(0, 15).map(e => e[0]));
+  const sn = r => { const s = sv(r.stratum); return topS.has(s) ? s : '其他'; };
+  const cells = new Map();
+  const cell = (s, c) => { const k = s + '\u0001' + c; if (!cells.has(k)) cells.set(k, { s, c, N: 0, A: 0, n: 0, a: 0, hi: 0 }); return cells.get(k); };
+  rows.forEach(r => { const x = cell(sn(r), cn(r)); x.N++; x.A += absA(r); if (weightOf(r, rw) >= hiW) x.hi++; });
+  samples.filter(isCovered).forEach(s => { const x = cell(sn(s), cn(s)); x.n++; x.a += absA(s); });
+  const list = [...cells.values()];
+  const names = k => [...new Set(list.map(x => x[k]))];
+  const strata = names('s').sort((a, b) => a === '其他' ? 1 : b === '其他' ? -1 : a < b ? -1 : 1);
+  let cols = names('c');
+  cols = axis === 'risk' ? cols.sort((a, b) => a === '其他' ? 1 : b === '其他' ? -1 : weightOf({ risk: b }, rw) - weightOf({ risk: a }, rw) || (a < b ? -1 : 1))
+    : cols.sort((a, b) => a === '其他' ? 1 : b === '其他' ? -1 : (cnt.get(b) || 0) - (cnt.get(a) || 0));
+  const agg = key => names(key).map(name => { const xs = list.filter(x => x[key] === name); return { id: name, name, N: sum(xs.map(x => x.N)), A: sum(xs.map(x => x.A)), n: sum(xs.map(x => x.n)), a: sum(xs.map(x => x.a)), hi: sum(xs.map(x => x.hi)) }; });
+  return { list, cells, strata, cols, byS: agg('s').sort((a, b) => strata.indexOf(a.name) - strata.indexOf(b.name)), byC: agg('c').sort((a, b) => cols.indexOf(a.name) - cols.indexOf(b.name)), tot: { N: sum(list.map(x => x.N)), A: sum(list.map(x => x.A)), n: sum(list.map(x => x.n)), a: sum(list.map(x => x.a)) } };
+}
+function heatmapSVG(cov, { metric = 'count' } = {}) {
+  const W = 98, H = 50, LW = 120, TH = 44, cols = cov.cols, rows = cov.strata;
+  if (!cols.length || !rows.length) return '<div class="empty">無資料</div>';
+  const val = x => x.N ? (metric === 'amount' ? (x.A ? x.a / x.A : 0) : x.n / x.N) : null;
+  const max = Math.max(0.0001, ...cov.list.map(x => val(x) || 0));
+  const w = LW + cols.length * W + 4, h = TH + rows.length * H + 4;
+  let s = `<svg viewBox="0 0 ${w} ${h}" width="100%" style="max-width:${w}px;font-size:12px">`;
+  cols.forEach((c, j) => { s += `<text x="${LW + j * W + W / 2}" y="${TH - 8}" text-anchor="middle" font-weight="bold"><title>${esc(c)}</title>${esc(c.length > 7 ? c.slice(0, 7) + '…' : c)}</text>`; });
+  rows.forEach((r, i) => {
+    s += `<text x="${LW - 8}" y="${TH + i * H + H / 2 + 4}" text-anchor="end" font-weight="bold"><title>${esc(r)}</title>${esc(r.length > 9 ? r.slice(0, 9) + '…' : r)}</text>`;
+    cols.forEach((c, j) => {
+      const x = cov.cells.get(r + '\u0001' + c), cx = LW + j * W, cy = TH + i * H;
+      if (!x || !x.N) { s += `<rect x="${cx + 2}" y="${cy + 2}" width="${W - 4}" height="${H - 4}" rx="5" fill="#f0eeec"/><text x="${cx + W / 2}" y="${cy + H / 2 + 4}" text-anchor="middle" fill="#aaa">—</text>`; return; }
+      const v = val(x), a = 0.08 + 0.92 * (v / max), gap = x.hi > 0 && x.n === 0, dark = a > 0.5;
+      s += `<g><title>${esc(r)} × ${esc(c)}\n母體 ${x.N} 筆／${fmtN(x.A)}\n樣本 ${x.n} 筆／${fmtN(x.a)}\n筆數涵蓋 ${fmtP(x.n / x.N)}　金額涵蓋 ${fmtP(x.A ? x.a / x.A : 0)}${x.hi ? '\n含高風險 ' + x.hi + ' 筆' : ''}</title>
+        <rect x="${cx + 2}" y="${cy + 2}" width="${W - 4}" height="${H - 4}" rx="5" fill="rgb(138,21,56)" fill-opacity="${a.toFixed(3)}" ${gap ? 'stroke="#e53935" stroke-width="3"' : 'stroke="#e3dfdb"'}/>
+        <text x="${cx + W / 2}" y="${cy + H / 2 - 2}" text-anchor="middle" font-weight="bold" fill="${dark ? '#fff' : '#6b0f2b'}">${gap ? '⚠ ' : ''}${fmtP(v, 1)}</text>
+        <text x="${cx + W / 2}" y="${cy + H / 2 + 14}" text-anchor="middle" font-size="11" fill="${dark ? '#fff' : '#555'}">${x.n} / ${x.N} 筆</text></g>`;
+    });
+  });
+  return s + '</svg>';
+}
+
+/* =====================================================================
+ * 7. 總覽
+ * ===================================================================*/
+async function renderDash(app) {
+  const [pops, plans, runs, samples] = await Promise.all([DB.all('populations'), DB.all('plans'), DB.all('runs'), DB.all('samples')]);
+  if (!pops.length) { emptyPop(app, '歡迎使用佐證抽樣實驗室。目前沒有資料，請先匯入母體，或載入範例資料體驗完整流程。'); return; }
+  const act = samples.filter(isActive), td = todayISO();
+  const pending = act.filter(s => s.status === '待調閱'), checked = act.filter(s => s.status === '已查核');
+  const bad = checked.filter(s => s.result === '異常'), od = pending.filter(s => s.dueDate && s.dueDate < td);
+  const rate = act.length ? checked.length / act.length : 0;
+  const runMap = new Map(runs.map(r => [r.id, r])), popMap = new Map(pops.map(p => [p.id, p]));
+  const runName = r => r ? `${popMap.get(r.popId)?.name || '(已刪除)'}｜${r.planName}` : '';
+  const stCnt = ST_ORDER.map(s => ({ label: s, value: samples.filter(x => x.status === s).length, color: { 待調閱: '#b26a00', 已取得: '#c9a24b', 已查核: '#2e7d32', 無法取得: '#c62828', 已替補: '#999', 備用: '#bbb' }[s] }));
+  app.innerHTML = `
+    <div class="stats">
+      <div class="stat"><div class="v">${fmtN(pops.length)}</div><div class="l">母體數</div></div>
+      <div class="stat"><div class="v">${fmtN(runs.length)}</div><div class="l">抽樣次數</div></div>
+      <div class="stat"><div class="v">${fmtN(pending.length)}</div><div class="l">待調閱佐證</div></div>
+      <div class="stat ${od.length ? 'bad' : ''}"><div class="v">${fmtN(od.length)}</div><div class="l">逾期未取得</div></div>
+      <div class="stat ${bad.length ? 'bad' : ''}"><div class="v">${fmtN(bad.length)}</div><div class="l">查核異常</div></div>
+      <div class="stat"><div class="v">${fmtP(rate, 0)}</div><div class="l">完成率（已查核／有效樣本）</div></div>
+    </div>
+    <div class="grid2"><div class="card"><h2>樣本狀態分布</h2>${barChart(stCnt)}</div>
+      <div id="d-runs"></div></div>
+    <div id="d-od"></div>`;
+  mountGrid($('#d-runs', app), {
+    id: 'dashRuns', title: '近期抽樣紀錄', rows: runs.sort(sortDesc).slice(0, 8), limit: 8, empty: '尚無抽樣紀錄，請至「執行與結果」執行抽樣',
+    cols: [{ key: 'createdAt', label: '時間', get: r => fmtD(r.createdAt) }, { key: 'planName', label: '母體｜計畫', get: runName }, { key: 'method', label: '方法', get: r => METHODS[r.method] }, { key: 'sampleCount', label: '樣本', num: true }, { key: 'locked', label: '鎖定', get: r => r.locked ? '🔒' : '' }],
+    actions: () => '<button class="btn sm" data-a="open">檢視</button>', onAction: (a, r) => { State.popId = r.popId; State.planId = r.planId; State.runId = r.id; location.hash = 'run'; }
+  });
+  mountGrid($('#d-od', app), {
+    id: 'dashOd', title: '⏰ 逾期未取得的佐證提醒', rows: od.map(s => ({ ...s, late: daysBetween(s.dueDate, td), runName: runName(runMap.get(s.runId)) })), sortKey: 'late', sortDir: -1,
+    empty: '沒有逾期的佐證 👍',
+    cols: [{ key: 'runName', label: '母體｜計畫' }, { key: 'key', label: '鍵值' }, { key: 'amount', label: '金額', num: true }, { key: 'dueDate', label: '調閱期限' }, { key: 'late', label: '逾期天數', num: true }, { key: 'unit', label: '單位' }],
+    actions: () => '<button class="btn sm" data-a="go">前往追蹤</button>', onAction: (a, s) => { const r = runMap.get(s.runId); State.popId = r.popId; State.planId = r.planId; State.runId = r.id; location.hash = 'track'; }
+  });
+}
+
+/* =====================================================================
+ * 8. 母體管理
+ * ===================================================================*/
+function parseTable(text) {
+  text = text.replace(/^\uFEFF/, '');
+  const first = text.split(/\r?\n/, 1)[0] || '', d = first.includes('\t') ? '\t' : ',';
+  const rows = []; let row = [], cur = '', q = false;
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i];
+    if (q) { if (c === '"') { if (text[i + 1] === '"') { cur += '"'; i++; } else q = false; } else cur += c; }
+    else if (c === '"' && cur === '') q = true;
+    else if (c === d) { row.push(cur); cur = ''; }
+    else if (c === '\n' || c === '\r') { if (c === '\r' && text[i + 1] === '\n') i++; row.push(cur); cur = ''; rows.push(row); row = []; }
+    else cur += c;
+  }
+  if (cur !== '' || row.length) { row.push(cur); rows.push(row); }
+  return rows.filter(r => r.some(x => String(x).trim() !== ''));
+}
+// [V3] 重寫金額解析：支援 科學記號、全形數字、括號負數、尾端負號、貨幣符號，
+// 並修正「-$1,000」「-NT$1,000」（負號在貨幣符號前面）被誤判成正數的問題
+function parseNum(v) {
+  let s = String(v ?? '').normalize('NFKC').replace(/[−–—]/g, '-').replace(/[,\s]/g, '');
+  if (!s) return NaN;
+  let neg = false;
+  if (/^\(.*\)$/.test(s)) { neg = true; s = s.slice(1, -1); }
+  if (/-$/.test(s)) { neg = !neg; s = s.slice(0, -1); }
+  const m = s.match(/([+-]?)[^\d.+-]*(\d+\.?\d*(?:[eE][+-]?\d+)?|\.\d+)/);
+  if (!m) return NaN;
+  const n = parseFloat(m[2]);
+  return (m[1] === '-') !== neg ? -n : n;
+}
+async function importPop(existing) {
+  const body = document.createElement('div');
+  body.innerHTML = `
+    <div class="row"><div class="field" style="flex:2"><label>母體名稱 *</label><input name="name" value="${esc(existing?.name)}"></div>
+      <div class="field" style="flex:1"><label>期別</label><input name="period" value="${esc(existing?.period)}" placeholder="例：115Q1"></div></div>
+    <div class="field"><label>資料來源說明</label><input name="src" value="${esc(existing?.sourceNote)}" placeholder="例：LN-6603 報表 115/03/31"></div>
+    <div class="field"><label>貼上表格（含標題列，直接從 Excel 複製即可）</label><textarea name="paste" style="min-height:110px" placeholder="案號\t金額\t分層\t單位\t風險"></textarea>
+      <div><label style="font-size:12px;color:var(--muted)">或選擇 CSV／TSV 檔（支援 UTF-8 與 Big5）：</label> <input type="file" name="file" accept=".csv,.tsv,.txt"></div></div>
+    <div id="map-area"></div>`;
+  const area = $('#map-area', body), fields = [['key', '鍵值（案號／編號）*'], ['amount', '金額 *'], ['stratum', '分層'], ['unit', '單位'], ['risk', '風險']];
+  const guess = { key: /案號|編號|號碼|代號|帳號|單號|^key$|^id$/i, amount: /金額|餘額|本金|amount/i, stratum: /分層|層|類別|種類|產品|stratum|type/i, unit: /單位|分行|部門|營業|unit|branch/i, risk: /風險|等級|risk|rating/i };
+  let table = null;
+  const analyse = () => {
+    const txt = $('[name=paste]', body).value;
+    if (!txt.trim()) { area.innerHTML = ''; table = null; return; }
+    table = parseTable(txt); const head = table[0].map(x => String(x).trim());
+    if (table.length < 2) { area.innerHTML = '<div class="errbox">至少需要標題列與一筆資料</div>'; return; }
+    const prev = existing?.fieldMap || {};
+    const pick = k => { let i = prev[k] ? head.indexOf(prev[k]) : -1; if (i < 0) i = head.findIndex(h => guess[k].test(h)); return i; };
+    area.innerHTML = `<div class="okbox">已解析 ${fmtN(table.length - 1)} 筆資料列、${head.length} 個欄位。請確認欄位對應：</div><div class="row">${fields.map(([k, l]) => `<div class="field"><label>${l}</label><select data-f="${k}"><option value="-1">（不使用）</option>${head.map((h, i) => `<option value="${i}" ${pick(k) === i ? 'selected' : ''}>${esc(h || '欄' + (i + 1))}</option>`).join('')}</select></div>`).join('')}</div>
+      <div style="overflow:auto;max-height:150px"><table class="grid"><thead><tr>${head.map(h => `<th>${esc(h)}</th>`).join('')}</tr></thead><tbody>${table.slice(1, 6).map(r => `<tr>${head.map((_, i) => `<td>${esc(r[i])}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`;
+  };
+  $('[name=paste]', body).oninput = analyse;
+  $('[name=file]', body).onchange = async e => { const f = e.target.files[0]; if (!f) return; $('[name=paste]', body).value = await readTextSmart(f); if (!$('[name=name]', body).value) $('[name=name]', body).value = f.name.replace(/\.[^.]+$/, ''); analyse(); };
+  await modal({
+    title: existing ? `重新匯入（覆蓋）：${existing.name}` : '匯入母體', body, ok: '匯入', wide: true,
+    onOk: async root => {
+      const v = n => root.querySelector(`[name=${n}]`).value.trim();
+      if (!v('name')) { toast('請輸入母體名稱', 'err'); return false; }
+      if (!table || table.length < 2) { toast('請先貼上資料或選擇檔案', 'err'); return false; }
+      const head = table[0].map(x => String(x).trim()), fm = {};
+      fields.forEach(([k]) => fm[k] = +root.querySelector(`[data-f=${k}]`).value);
+      if (fm.key < 0 || fm.amount < 0) { toast('「鍵值」與「金額」必須對應欄位', 'err'); return false; }
+      const popId = existing?.id || uid(), seen = new Map(); let bad = 0, dup = 0;
+      const rows = table.slice(1).map((r, i) => {
+        let key = String(r[fm.key] ?? '').trim() || `列${i + 2}`;
+        if (seen.has(key)) { const c = seen.get(key) + 1; seen.set(key, c); key = `${key}#${c}`; dup++; } else seen.set(key, 1);
+        let amount = parseNum(r[fm.amount]); if (isNaN(amount)) { amount = 0; bad++; }
+        const g = k => fm[k] >= 0 ? String(r[fm[k]] ?? '').trim() : '';
+        const data = {}; head.forEach((h, j) => data[h || '欄' + (j + 1)] = r[j] ?? '');
+        return { id: `${popId}_${i + 1}`, popId, rowNo: i + 1, key, amount, stratum: g('stratum'), unit: g('unit'), risk: g('risk'), data };
+      });
+      const fp = popFingerprint(rows);
+      if (existing && fp !== existing.fingerprint && !await confirmBox('⚠ 母體已變動（指紋不同）：依舊母體執行的抽樣將無法重現，且標示警告。仍要覆蓋嗎？', '覆蓋')) return false;
+      const pop = { ...(existing || { id: popId, createdAt: now() }), name: v('name'), period: v('period'), sourceNote: v('src'), columns: head, fieldMap: Object.fromEntries(fields.map(([k]) => [k, fm[k] >= 0 ? head[fm[k]] : ''])), rowCount: rows.length, totalAmount: sum(rows.map(r => r.amount)), fingerprint: fp, updatedAt: now() };
+      const oldIds = existing ? await keysBy('popRows', 'byPop', existing.id) : [];
+      await DB.tx(['populations', 'popRows'], t => { oldIds.forEach(id => t.objectStore('popRows').delete(id)); rows.forEach(r => t.objectStore('popRows').put(r)); t.objectStore('populations').put(pop); });
+      State.popId = pop.id; if (!existing) { State.planId = null; State.runId = null; }
+      toast(`已匯入 ${fmtN(rows.length)} 筆${bad ? `；${bad} 筆金額無法解析（以 0 計）` : ''}${dup ? `；${dup} 筆鍵值重複（已加 #序號）` : ''}`, bad || dup ? '' : 'ok');
+      refresh();
+    }
+  });
+}
+// 母體若含「已鎖定」的抽樣，刪除前必須輸入「刪除」二字確認（鎖定結果是稽核證據）
+async function deletePop(pop) {
+  const runs = await DB.byIndex('runs', 'byPop', pop.id), locked = runs.filter(r => r.locked).length;
+  const msg = `確定刪除母體「${pop.name}」？將一併刪除 ${fmtN(pop.rowCount)} 筆明細、其計畫、${runs.length} 次抽樣紀錄、樣本與附件，無法復原。`;
+  if (locked) {
+    const ok = await modal({
+      title: '⚠ 刪除含已鎖定抽樣的母體', ok: '刪除',
+      body: `<p>${esc(msg)}</p><div class="errbox">其中 <b>${locked}</b> 次抽樣已鎖定（稽核證據）。建議先到「資料管理」匯出 JSON 備份。</div><div class="field"><label>請輸入「刪除」二字確認</label><input name="t"></div>`,
+      onOk: root => { if (root.querySelector('[name=t]').value.trim() !== '刪除') { toast('請輸入「刪除」二字以確認', 'err'); return false; } }
+    });
+    if (!ok) return;
+  } else if (!await confirmBox(msg, '刪除')) return;
+  const rowIds = await keysBy('popRows', 'byPop', pop.id), planIds = await keysBy('plans', 'byPop', pop.id);
+  await delRuns(runs.map(r => r.id), t => { rowIds.forEach(id => t.objectStore('popRows').delete(id)); planIds.forEach(id => t.objectStore('plans').delete(id)); t.objectStore('populations').delete(pop.id); });
+  toast('已刪除', 'ok'); refresh();
+}
+async function renderPop(app) {
+  const ctx = await syncSel();
+  app.innerHTML = '<div id="g-pop"></div><div id="pop-detail"></div>';
+  mountGrid($('#g-pop', app), {
+    id: 'pops', title: '母體清單', rows: ctx.pops, sortKey: 'createdAt', sortDir: -1, empty: '尚無母體，請按「匯入母體」',
+    toolbar: '<button class="btn pri" id="p-add">＋ 匯入母體</button>',
+    // [V3] 母體指紋：畫面只顯示前 12 碼，但 CSV／Excel 匯出完整 64 碼（稽核底稿需要完整指紋）
+    cols: [{ key: 'name', label: '名稱' }, { key: 'period', label: '期別' }, { key: 'rowCount', label: '筆數', num: true }, { key: 'totalAmount', label: '金額合計', num: true },
+      { key: 'fingerprint', label: '母體指紋', get: r => r.fingerprint, html: r => `<span class="mono" title="${esc(r.fingerprint)}">${esc(r.fingerprint.slice(0, 12))}…</span>` },
+      { key: 'createdAt', label: '建立時間', get: r => fmtD(r.createdAt), sortVal: r => r.createdAt }],
+    actions: r => `<button class="btn sm" data-a="use" ${r.id === State.popId ? 'disabled' : ''}>${r.id === State.popId ? '✔ 使用中' : '選用'}</button> <button class="btn sm" data-a="re">重新匯入</button> <button class="btn sm danger" data-a="del">🗑</button>`,
+    onAction: (a, r) => { if (a === 'use') { State.popId = r.id; State.planId = null; State.runId = null; refresh(); } else if (a === 're') importPop(r); else deletePop(r); }
+  });
+  $('#p-add', app).onclick = () => importPop();
+  if (ctx.pop) await popDetail($('#pop-detail', app), ctx.pop, ctx.runs);
+}
+async function popDetail(host, pop, runs) {
+  const rows = await DB.byIndex('popRows', 'byPop', pop.id), amt = rows.map(r => r.amount);
+  const stale = runs.filter(r => r.popFingerprint !== pop.fingerprint).length;
+  const sg = [...groupBy(rows, r => sv(r.stratum)).entries()].map(([name, a]) => ({ id: name, name, N: a.length, amount: sum(a.map(r => r.amount)), avg: sum(a.map(r => r.amount)) / a.length, max: maxOf(a.map(r => r.amount)) })).sort((a, b) => b.amount - a.amount);
+  const tot = pop.totalAmount || 1;
+  host.innerHTML = `<div class="card"><h2>母體摘要：${esc(pop.name)} <span class="tag gold">${esc(pop.period || '未填期別')}</span></h2>
+    ${stale ? `<div class="warnbox">⚠ 有 ${stale} 次抽樣是依舊版母體執行（母體指紋已不同），無法重現原抽樣。</div>` : ''}
+    <div class="grid2"><div><table class="kv">
+      <tr><th>筆數</th><td>${fmtN(rows.length)}</td></tr><tr><th>金額合計</th><td>${fmtN(pop.totalAmount, 2)}</td></tr>
+      <tr><th>平均／中位數</th><td>${fmtN(sum(amt) / (amt.length || 1), 2)}／${fmtN(median(amt), 2)}</td></tr>
+      <tr><th>標準差</th><td>${fmtN(stdev(amt), 2)}</td></tr><tr><th>最大／最小</th><td>${fmtN(maxOf(amt), 2)}／${fmtN(minOf(amt), 2)}</td></tr>
+      <tr><th>欄位對應</th><td>${Object.entries(pop.fieldMap || {}).filter(e => e[1]).map(([k, v]) => `${{ key: '鍵值', amount: '金額', stratum: '分層', unit: '單位', risk: '風險' }[k]}＝${esc(v)}`).join('、')}</td></tr>
+      <tr><th>來源說明</th><td>${esc(pop.sourceNote) || '—'}</td></tr>
+      <tr><th>母體指紋</th><td class="mono">${esc(pop.fingerprint)}</td></tr></table></div>
+      <div><h3 style="margin-top:0">各層金額</h3>${barChart(sg.slice(0, 10).map(x => ({ label: x.name, value: x.amount })), { width: 480 })}</div></div></div>
+    <div id="pd-strata"></div><div id="pd-rows"></div>`;
+  mountGrid($('#pd-strata', host), {
+    id: 'popStrata', title: '分層統計', rows: sg, limit: 100, sortKey: 'amount', sortDir: -1,
+    cols: [{ key: 'name', label: '分層' }, { key: 'N', label: '筆數', num: true }, { key: 'amount', label: '金額', num: true }, { key: 'share', label: '金額占比', get: r => fmtP(r.amount / tot), sortVal: r => r.amount }, { key: 'avg', label: '平均金額', num: true }, { key: 'max', label: '最大金額', num: true }]
+  });
+  mountGrid($('#pd-rows', host), {
+    id: 'popRows', title: '母體明細', rows, sortKey: 'rowNo', limit: 100,
+    cols: [{ key: 'rowNo', label: '#', num: true }, { key: 'key', label: '鍵值' }, { key: 'amount', label: '金額', num: true, dec: 2 }, { key: 'stratum', label: '分層' }, { key: 'unit', label: '單位' }, { key: 'risk', label: '風險' }]
+  });
+}
+
+/* =====================================================================
+ * 9. 抽樣計畫
+ * ===================================================================*/
+const genSeed = () => 'SEED-' + Math.random().toString(36).slice(2, 8).toUpperCase();
+async function editPlan(plan, preset = {}) {
+  const isNew = !plan;
+  const P = { ...defaultParams(), ...(plan?.params || {}), ...(preset.params || {}) };
+  const v = plan || { id: uid(), popId: State.popId, name: '', method: preset.method || 'srs', n: preset.n || 30, m: 5, seed: genSeed(), note: '', createdAt: now() };
+  const body = document.createElement('div');
+  const opt = (obj, cur) => Object.entries(obj).map(([k, t]) => `<option value="${k}" ${k === cur ? 'selected' : ''}>${esc(t)}</option>`).join('');
+  body.innerHTML = `
+    <div class="field"><label>計畫名稱 *</label><input name="name" value="${esc(v.name)}" placeholder="例：授信條件佐證 115Q1 分層抽樣"></div>
+    <div class="row"><div class="field" style="flex:2"><label>抽樣方法</label><select name="method">${opt(METHODS, v.method)}</select></div>
+      <div class="field"><label id="n-label">樣本數 n *</label><input name="n" type="number" min="1" style="width:110px" value="${esc(v.n)}"></div>
+      <div class="field"><label>預備數 m</label><input name="m" type="number" min="0" style="width:90px" value="${esc(v.m)}"></div></div>
+    <div class="field"><label>亂數種子（相同種子＋相同母體＋相同參數＝相同樣本）</label><div class="row"><input name="seed" value="${esc(v.seed)}" style="flex:1"><button class="btn" type="button" id="pl-seed">🎲 產生</button></div></div>
+    <div class="row">
+      <div class="field" data-m="strat base:strat"><label>分層配置方式</label><select name="allocation">${opt(ALLOC, P.allocation)}</select></div>
+      <div class="field" data-m="strat base:strat"><label>每層最低抽樣數</label><input name="minPer" type="number" min="0" style="width:110px" value="${esc(P.minPerStratum)}"></div>
+      <div class="field" data-m="keyplus"><label>全查金額門檻（≥ 即全查）</label><input name="th" type="number" min="0" step="any" value="${esc(P.keyItemThreshold)}"></div>
+      <div class="field" data-m="keyplus"><label>其餘項目的抽樣方法</label><select name="base">${opt({ srs: METHODS.srs, sys: METHODS.sys, strat: METHODS.strat, mus: METHODS.mus, risk: METHODS.risk }, P.baseMethod)}</select></div></div>
+    <div class="row"><div class="field" style="flex:2"><label>風險權重（標籤=權重，逗號分隔；風險欄為數字時直接當權重）</label><input name="rw" value="${esc(weightsText(P.riskWeights))}"></div>
+      <div class="field"><label>高風險門檻權重（覆蓋地圖標示用）</label><input name="hiw" type="number" step="any" style="width:130px" value="${esc(P.highRiskWeight)}"></div></div>
+    <div class="row"><div class="field"><label>信賴水準（記錄用）</label><input name="conf" type="number" step="0.01" min="0.5" max="0.999" style="width:110px" value="${esc(P.confidence)}"></div>
+      <div class="field"><label>可容忍偏差率（記錄用）</label><input name="rate" type="number" step="0.001" style="width:130px" value="${esc(P.tolerableRate)}"></div>
+      <div class="field"><label>可容忍誤述（記錄用）</label><input name="tm" type="number" step="any" style="width:140px" value="${esc(P.tolerableMisstatement)}"></div></div>
+    <div class="field"><label>備註</label><textarea name="note">${esc(v.note)}</textarea></div>`;
+  const sel = $('[name=method]', body), base = $('[name=base]', body);
+  const sync = () => {
+    body.querySelectorAll('[data-m]').forEach(el => { const ms = el.dataset.m.split(' '); el.style.display = ms.includes(sel.value) || (sel.value === 'keyplus' && ms.includes('base:' + base.value)) ? '' : 'none'; });
+    $('#n-label', body).textContent = sel.value === 'keyplus' ? '其餘項目抽樣數 n *' : '樣本數 n *';
+  };
+  sel.onchange = base.onchange = sync; sync();
+  $('#pl-seed', body).onclick = () => $('[name=seed]', body).value = genSeed();
+  await modal({
+    title: isNew ? '新增抽樣計畫' : '編輯抽樣計畫', body, wide: true, ok: '儲存',
+    onOk: async root => {
+      const g = n => root.querySelector(`[name=${n}]`).value.trim();
+      if (!g('name')) { toast('請輸入計畫名稱', 'err'); return false; }
+      if (!(+g('n') >= 1)) { toast('樣本數至少為 1', 'err'); return false; }
+      if (!g('seed')) { toast('請設定種子', 'err'); return false; }
+      const rw = parseWeights(g('rw'));
+      Object.assign(v, { name: g('name'), method: g('method'), n: Math.floor(+g('n')), m: Math.max(0, Math.floor(+g('m') || 0)), seed: g('seed'), note: g('note'), updatedAt: now(),
+        params: { allocation: g('allocation'), minPerStratum: Math.max(0, Math.floor(+g('minPer') || 0)), keyItemThreshold: +g('th') || 0, baseMethod: g('base'), riskWeights: rw, highRiskWeight: +g('hiw') || 5, confidence: +g('conf') || 0.95, tolerableRate: +g('rate') || 0.05, tolerableMisstatement: +g('tm') || 0 } });
+      await DB.put('plans', v); State.planId = v.id; if (isNew) State.runId = ''; toast('已儲存計畫', 'ok'); refresh();
+    }
+  });
+}
+async function renderPlan(app) {
+  const ctx = await syncSel();
+  if (!ctx.pop) return emptyPop(app, '請先匯入母體，才能建立抽樣計畫。');
+  const rows = await DB.byIndex('popRows', 'byPop', ctx.pop.id), total = sum(rows.map(absA));
+  const tmDef = Math.round(total * 0.05);
+  app.innerHTML = selBar(ctx) + `<div id="pl-list"></div><div id="pl-prev"></div>
+    <div class="grid2">
+      <div class="card"><h2>樣本數試算：屬性抽樣</h2><div class="hint">預期零誤差：n = ⌈ ln(1−信賴水準) ／ ln(1−可容忍偏差率) ⌉</div>
+        <div class="row"><div class="field"><label>信賴水準</label><select id="c1-conf"><option value="0.9">90%</option><option value="0.95" selected>95%</option><option value="0.99">99%</option></select></div>
+        <div class="field"><label>可容忍偏差率 (%)</label><input id="c1-rate" type="number" step="0.1" value="5" style="width:110px"></div></div>
+        <div style="font-size:22px;color:var(--primary);font-weight:bold" id="c1-out"></div><br><button class="btn gold" id="c1-use">以此建立計畫（簡單隨機）</button></div>
+      <div class="card"><h2>樣本數試算：金額單位抽樣</h2><div class="hint">n = ⌈ 母體總額 × 信賴係數 ／ 可容忍誤述 ⌉（係數：90%＝2.31、95%＝3.0、99%＝4.61）</div>
+        <div class="row"><div class="field"><label>母體總額</label><input id="c2-tot" type="number" step="any" value="${total}" style="width:150px"></div>
+        <div class="field"><label>可容忍誤述（金額）</label><input id="c2-tm" type="number" step="any" value="${tmDef || 1}" style="width:150px"></div>
+        <div class="field"><label>信賴水準</label><select id="c2-conf"><option value="0.9">90%</option><option value="0.95" selected>95%</option><option value="0.99">99%</option></select></div></div>
+        <div style="font-size:22px;color:var(--primary);font-weight:bold" id="c2-out"></div><br><button class="btn gold" id="c2-use">以此建立計畫（MUS）</button></div>
+    </div>`;
+  bindSel(app);
+  mountGrid($('#pl-list', app), {
+    id: 'plans', title: '抽樣計畫', rows: ctx.plans, sortKey: 'createdAt', sortDir: -1, empty: '此母體尚無計畫，請按「新增計畫」',
+    toolbar: '<button class="btn pri" id="pl-add">＋ 新增計畫</button>',
+    cols: [{ key: 'name', label: '名稱' }, { key: 'method', label: '方法', get: r => METHODS[r.method] }, { key: 'n', label: 'n', num: true }, { key: 'm', label: '預備 m', num: true }, { key: 'seed', label: '種子' }, { key: 'note', label: '備註' }, { key: 'createdAt', label: '建立', get: r => fmtD(r.createdAt), sortVal: r => r.createdAt }],
+    actions: r => '<button class="btn sm" data-a="sel">配置預覽</button> <button class="btn sm" data-a="run">▶ 執行</button> <button class="btn sm" data-a="e">✎</button> <button class="btn sm danger" data-a="d">🗑</button>',
+    onAction: async (a, r) => {
+      if (a === 'sel') { State.planId = r.id; const rs = (await DB.byIndex('runs', 'byPlan', r.id)).sort(sortDesc); State.runId = rs[0]?.id || ''; refresh(); }
+      else if (a === 'run') { State.planId = r.id; const rs = (await DB.byIndex('runs', 'byPlan', r.id)).sort(sortDesc); State.runId = rs[0]?.id || ''; location.hash = 'run'; }
+      else if (a === 'e') editPlan(r);
+      else {
+        const rs = await DB.byIndex('runs', 'byPlan', r.id);
+        if (rs.some(x => x.locked)) return toast('此計畫含已鎖定的抽樣結果，無法刪除', 'err');
+        if (!await confirmBox(`刪除計畫「${r.name}」？其 ${rs.length} 次抽樣紀錄、樣本與附件也會一併刪除。`, '刪除')) return;
+        await delRuns(rs.map(x => x.id), t => t.objectStore('plans').delete(r.id)); toast('已刪除', 'ok'); refresh();
+      }
+    }
+  });
+  $('#pl-add', app).onclick = () => editPlan();
+  const prev = $('#pl-prev', app);
+  if (ctx.plan) {
+    try {
+      const res = execPlan(ctx.plan, rows), roles = r => res.main.filter(x => x.role === r).length;
+      prev.innerHTML = `<div class="card"><h2>配置預覽：${esc(ctx.plan.name)} <span class="tag gold">${esc(METHODS[ctx.plan.method])}</span></h2>
+        <div class="hint">${esc(METHOD_DESC[ctx.plan.method])}</div>
+        <p>預計正選 <b>${roles('正選')}</b> 筆${roles('全查') ? `、全查 <b>${roles('全查')}</b> 筆` : ''}、預備 <b>${res.reserve.length}</b> 筆。</p>
+        ${res.info.map(t => `<div class="hint">• ${esc(t)}</div>`).join('')}${res.warnings.map(t => `<div class="warnbox">⚠ ${esc(t)}</div>`).join('')}
+        ${res.strata ? `<table class="grid"><thead><tr><th>分層</th><th class="num">母體筆數</th><th class="num">金額</th><th class="num">標準差</th><th class="num">配置樣本數</th><th class="num">抽樣比率</th></tr></thead><tbody>${res.strata.map(x => `<tr><td>${esc(x.name)}</td><td class="num">${fmtN(x.N)}</td><td class="num">${fmtN(x.amount)}</td><td class="num">${fmtN(x.S, 1)}</td><td class="num"><b>${x.alloc}</b></td><td class="num">${fmtP(x.alloc / x.N)}</td></tr>`).join('')}</tbody></table>` : ''}</div>`;
+    } catch (e) { prev.innerHTML = `<div class="card"><div class="errbox">預覽失敗：${esc(e.message)}</div></div>`; }
+  }
+  const c1 = () => { const n = attrSampleSize(+$('#c1-conf', app).value, +$('#c1-rate', app).value / 100); $('#c1-out', app).textContent = isFinite(n) ? `n = ${n}` : '請輸入有效參數'; return n; };
+  const c2 = () => { const f = confFactor(+$('#c2-conf', app).value), n = musSampleSize(+$('#c2-tot', app).value, f, +$('#c2-tm', app).value); $('#c2-out', app).textContent = isFinite(n) ? `n = ${n}（係數 ${f}）` : '請輸入有效參數'; return n; };
+  ['c1-conf', 'c1-rate'].forEach(i => $('#' + i, app).oninput = c1); ['c2-tot', 'c2-tm', 'c2-conf'].forEach(i => $('#' + i, app).oninput = c2); c1(); c2();
+  $('#c1-use', app).onclick = () => { const n = c1(); if (isFinite(n)) editPlan(null, { method: 'srs', n, params: { confidence: +$('#c1-conf', app).value, tolerableRate: +$('#c1-rate', app).value / 100 } }); };
+  $('#c2-use', app).onclick = () => { const n = c2(); if (isFinite(n)) editPlan(null, { method: 'mus', n, params: { confidence: +$('#c2-conf', app).value, tolerableMisstatement: +$('#c2-tm', app).value } }); };
+}
+
+/* =====================================================================
+ * 10. 執行與結果
+ * ===================================================================*/
+async function buildRun(plan, pop, rows, due) {
+  const res = execPlan(plan, rows), fp = popFingerprint(rows), runId = uid();
+  const snap = { method: plan.method, n: plan.n, m: plan.m, seed: String(plan.seed), params: { ...defaultParams(), ...(plan.params || {}) } };
+  const all = [...res.main, ...res.reserve];
+  const samples = all.map((x, i) => ({ id: uid(), runId, rowId: x.row.id, key: x.row.key, seq: i + 1, role: x.role, reason: x.reason, status: x.role === '預備' ? '備用' : '待調閱', replacedBy: null, replaces: null, result: '', finding: '', dueDate: x.role === '預備' ? '' : (due || ''), checkedAt: null, amount: x.row.amount, stratum: x.row.stratum || '', unit: x.row.unit || '', risk: x.row.risk || '' }));
+  const act = samples.filter(s => s.role !== '預備'), pa = sum(rows.map(absA));
+  const run = {
+    id: runId, planId: plan.id, popId: pop.id, planName: plan.name, seed: snap.seed, method: plan.method, popFingerprint: fp, paramsSnapshot: snap,
+    sampleCount: act.length, reserveCount: samples.length - act.length,
+    coverage: { popCount: rows.length, popAmount: pa, sampleCount: act.length, sampleAmount: sum(act.map(absA)), countRate: act.length / rows.length, amountRate: pa ? sum(act.map(absA)) / pa : 0 },
+    info: res.info, warnings: res.warnings, locked: false, createdAt: now(),
+    runHash: sha256([fp, JSON.stringify(snap), all.map(x => x.role + ':' + x.row.key).join('\n')].join('|'))
+  };
+  return { run, samples };
+}
+async function doRun(plan0) {
+  const plan = (await DB.get('plans', plan0.id)) || plan0;
+  const prior = (await DB.byIndex('runs', 'byPlan', plan.id)).filter(r => r.seed === String(plan.seed));
+  const body = document.createElement('div');
+  body.innerHTML = `<p>將依計畫「<b>${esc(plan.name)}</b>」（${esc(METHODS[plan.method])}，種子 ${esc(plan.seed)}）執行抽樣。</p>
+    ${prior.length ? `<div class="warnbox">此計畫已有 ${prior.length} 次以相同種子執行的紀錄；母體與參數若未改變，再次執行會得到<b>相同樣本</b>。要抽不同樣本請先修改計畫的種子。</div>` : ''}
+    <div class="field"><label>佐證調閱期限（正選與全查樣本；可留空）</label><input name="due" type="date" value="${addDays(14)}"></div>
+    <div class="hint">相同母體、參數與種子會得到相同樣本。</div>`;
+  await modal({
+    title: '執行抽樣', body, ok: '執行', onOk: async root => {
+      const pop = await DB.get('populations', plan.popId), rows = await DB.byIndex('popRows', 'byPop', plan.popId);
+      const { run, samples } = await buildRun(plan, pop, rows, root.querySelector('[name=due]').value);
+      await DB.tx(['runs', 'samples'], t => { t.objectStore('runs').put(run); samples.forEach(s => t.objectStore('samples').put(s)); });
+      State.planId = plan.id; State.runId = run.id; toast(`已完成抽樣：正選／全查 ${run.sampleCount} 筆、預備 ${run.reserveCount} 筆`, 'ok'); refresh();
+    }
+  });
+}
+async function verifyRun(run) {
+  const pop = await DB.get('populations', run.popId), rows = await DB.byIndex('popRows', 'byPop', run.popId), samples = (await DB.byIndex('samples', 'byRun', run.id)).sort((a, b) => a.seq - b.seq);
+  const fp = popFingerprint(rows), msgs = [];
+  const fpOk = fp === run.popFingerprint;
+  msgs.push([fpOk, fpOk ? '母體指紋一致，母體未變動。' : '母體指紋不同：母體已變動，無法重現原抽樣。']);
+  let sameSet = false;
+  try {
+    const res = execPlan(run.paramsSnapshot, rows), a = [...res.main, ...res.reserve].map(x => x.role + ':' + x.row.key).join('\n'), b = samples.map(s => s.role + ':' + s.key).join('\n');
+    sameSet = a === b; msgs.push([sameSet, sameSet ? `以相同種子與參數重新抽樣，${samples.length} 筆樣本（含預備）順序完全一致。` : '以相同種子與參數重新抽樣，結果與儲存的樣本不同（母體的分層／單位／風險欄位可能被修改過）。']);
+    const hash = sha256([fp, JSON.stringify(run.paramsSnapshot), a].join('|')); msgs.push([hash === run.runHash, hash === run.runHash ? '執行指紋一致。' : '執行指紋不一致。']);
+  } catch (e) { msgs.push([false, '重新抽樣失敗：' + e.message]); }
+  await modal({ title: `重現驗證：${pop?.name || ''}`, ok: '關閉', cancel: '', body: msgs.map(([ok, t]) => `<div class="${ok ? 'okbox' : 'errbox'}">${ok ? '✔' : '✘'} ${esc(t)}</div>`).join('') });
+}
+const sampleCols = () => [
+  { key: 'seq', label: '#', num: true }, { key: 'role', label: '角色', html: roleTag }, { key: 'key', label: '鍵值' }, { key: 'amount', label: '金額', num: true, dec: 2 },
+  { key: 'stratum', label: '分層' }, { key: 'unit', label: '單位' }, { key: 'risk', label: '風險' }, { key: 'reason', label: '入選原因' }, { key: 'status', label: '狀態', get: stText, html: stTag }, { key: 'rel', label: '替補關係' }
+];
+async function renderRun(app) {
+  const ctx = await syncSel();
+  if (!ctx.pop) return emptyPop(app, '請先匯入母體並建立抽樣計畫。');
+  app.innerHTML = selBar(ctx, { plan: true, run: true, runScope: 'plan' }) + `<div class="card"><div class="row"><button class="btn pri" id="r-run" ${ctx.plan ? '' : 'disabled'}>🎲 執行抽樣</button>
+    ${ctx.plan ? `<span class="hint">計畫：${esc(ctx.plan.name)}｜${esc(METHODS[ctx.plan.method])}｜n=${ctx.plan.n}、預備 ${ctx.plan.m}｜種子 ${esc(ctx.plan.seed)}</span>` : '<span class="hint">此母體尚無計畫，請先到「抽樣計畫」建立。</span>'}</div></div><div id="r-detail"></div>`;
+  bindSel(app);
+  $('#r-run', app).onclick = () => doRun(ctx.plan);
+  const run = ctx.run && ctx.run.planId === State.planId ? ctx.run : null;
+  if (!run) { $('#r-detail', app).innerHTML = ctx.plan ? '<div class="card empty">此計畫尚未執行抽樣。</div>' : ''; return; }
+  const samples0 = (await DB.byIndex('samples', 'byRun', run.id)).sort((a, b) => a.seq - b.seq), seqOf = new Map(samples0.map(s => [s.id, s.seq]));
+  const samples = samples0.map(s => ({ ...s, rel: relText(s, seqOf) }));
+  const stale = run.popFingerprint !== ctx.pop.fingerprint, sn = run.paramsSnapshot, cv0 = run.coverage || {};
+  const cov = samples.filter(isCovered), cv = { popCount: cv0.popCount, sampleCount: cov.length, countRate: cv0.popCount ? cov.length / cv0.popCount : 0, amountRate: cv0.popAmount ? sum(cov.map(absA)) / cv0.popAmount : 0 };
+  const lost = samples.filter(s => isActive(s) && s.status === '無法取得').length;
+  $('#r-detail', app).innerHTML = `<div class="card"><h2>抽樣結果 ${run.locked ? '<span class="tag ok">🔒 已鎖定</span>' : '<span class="tag warn">未鎖定</span>'}<span class="sp"></span>
+      <button class="btn" id="r-ver">✔ 驗證重現</button><button class="btn" id="r-lock" ${run.locked ? 'disabled' : ''}>🔒 鎖定結果</button><button class="btn danger" id="r-del" ${run.locked ? 'disabled' : ''}>🗑 刪除</button>
+      <button class="btn" id="r-csv">樣本清單 CSV</button><button class="btn gold" id="r-xls">抽樣底稿 Excel</button><button class="btn" id="r-print">🖨 報告</button></h2>
+    ${stale ? '<div class="errbox">⚠ 母體已變動：此次抽樣依舊版母體執行，無法重現原抽樣。</div>' : ''}
+    ${lost ? `<div class="warnbox">⚠ 有 ${lost} 筆樣本「無法取得」且尚未替補，下方涵蓋率已排除這些樣本。</div>` : ''}
+    ${(run.warnings || []).map(t => `<div class="warnbox">⚠ ${esc(t)}</div>`).join('')}
+    <div class="grid2"><table class="kv"><tr><th>執行時間</th><td>${fmtD(run.createdAt)}</td></tr><tr><th>方法</th><td>${esc(METHODS[run.method])}</td></tr><tr><th>種子</th><td>${esc(run.seed)}</td></tr>
+      <tr><th>n／預備 m</th><td>${sn.n}／${sn.m}</td></tr><tr><th>樣本（正選＋全查）</th><td>${run.sampleCount} 筆；預備 ${run.reserveCount} 筆</td></tr>
+      <tr><th>筆數涵蓋率</th><td>${fmtP(cv.countRate, 2)}（${fmtN(cv.sampleCount)} ／ ${fmtN(cv.popCount)}）</td></tr><tr><th>金額涵蓋率</th><td>${fmtP(cv.amountRate, 2)}</td></tr></table>
+    <table class="kv"><tr><th>母體指紋</th><td class="mono">${esc(run.popFingerprint)}</td></tr><tr><th>執行指紋</th><td class="mono">${esc(run.runHash)}</td></tr>
+      <tr><th>說明</th><td>${(run.info || []).map(t => `<div>${esc(t)}</div>`).join('')}</td></tr></table></div></div><div id="r-grid"></div>`;
+  mountGrid($('#r-grid', app), { id: 'runSamples', title: '樣本清單', rows: samples, sortKey: 'seq', cols: sampleCols(), limit: 300 });
+  $('#r-ver', app).onclick = () => verifyRun(run);
+  $('#r-lock', app).onclick = async () => { if (await confirmBox('鎖定後此次抽樣結果不能刪除或重抽（佐證追蹤仍可更新）。確定鎖定？', '鎖定')) { run.locked = true; run.lockedAt = now(); await DB.put('runs', run); toast('已鎖定', 'ok'); refresh(); } };
+  // [V3] 刪除抽樣後留在「同一計畫」：有其他次抽樣就切到最新一次，否則顯示「尚未執行」（V2 會誤跳到別的計畫）
+  $('#r-del', app).onclick = async () => {
+    if (!await confirmBox('刪除此次抽樣紀錄、樣本與附件？', '刪除')) return;
+    await delRuns([run.id]);
+    const rs = (await DB.byIndex('runs', 'byPlan', run.planId)).sort(sortDesc); State.planId = run.planId; State.runId = rs[0]?.id || '';
+    toast('已刪除', 'ok'); refresh();
+  };
+  $('#r-csv', app).onclick = () => download(`${APP.filePrefix}_樣本清單_${today()}.csv`, toCSV(samples, sampleCols()), 'text/csv;charset=utf-8');
+  $('#r-xls', app).onclick = () => exportWorkbook(run);
+  $('#r-print', app).onclick = () => printReport(run);
+}
+async function exportWorkbook(run) {
+  const pop = await DB.get('populations', run.popId), rows = await DB.byIndex('popRows', 'byPop', run.popId), samples0 = (await DB.byIndex('samples', 'byRun', run.id)).sort((a, b) => a.seq - b.seq);
+  const seqOf = new Map(samples0.map(s => [s.id, s.seq])), samples = samples0.map(s => ({ ...s, rel: relText(s, seqOf) }));
+  const sn = run.paramsSnapshot, P = sn.params, byId = new Map(samples.map(s => [s.id, s]));
+  const kv = [['母體', pop?.name], ['期別', pop?.period], ['母體筆數', rows.length], ['母體金額', sum(rows.map(r => r.amount))], ['母體指紋', run.popFingerprint], ['抽樣方法', METHODS[run.method]], ['計畫名稱', run.planName], ['樣本數 n', sn.n], ['預備數 m', sn.m], ['種子', run.seed],
+    ['分層配置', ALLOC[P.allocation]], ['每層最低抽樣數', P.minPerStratum], ['全查門檻', P.keyItemThreshold], ['其餘抽樣方法', METHODS[P.baseMethod]], ['風險權重', weightsText(P.riskWeights)], ['信賴水準', P.confidence], ['可容忍偏差率', P.tolerableRate], ['可容忍誤述', P.tolerableMisstatement],
+    ['執行時間', fmtD(run.createdAt)], ['執行指紋', run.runHash], ['鎖定', run.locked ? '是（' + fmtD(run.lockedAt) + '）' : '否'], ['說明', (run.info || []).join('；')], ['警告', (run.warnings || []).join('；')]].map(([k, v]) => ({ k, v: v ?? '' }));
+  const sc = [{ key: 'seq', label: '#' }, { key: 'role', label: '角色' }, { key: 'key', label: '鍵值' }, { key: 'amount', label: '金額' }, { key: 'stratum', label: '分層' }, { key: 'unit', label: '單位' }, { key: 'risk', label: '風險' }, { key: 'reason', label: '入選原因' }, { key: 'st', label: '狀態', get: stText }, { key: 'rel', label: '替補關係' }, { key: 'dueDate', label: '調閱期限' }, { key: 'finding', label: '查核說明' }];
+  const cvS = covData(rows, samples, run, 'unit'), cvR = covData(rows, samples, run, 'risk');
+  const cc = [{ key: 'type', label: '類型' }, { key: 'name', label: '項目' }, { key: 'N', label: '母體筆數' }, { key: 'A', label: '母體金額' }, { key: 'n', label: '樣本筆數' }, { key: 'a', label: '樣本金額' }, { key: 'cr', label: '筆數涵蓋率(%)', get: r => r.N ? +(r.n / r.N * 100).toFixed(2) : 0 }, { key: 'ar', label: '金額涵蓋率(%)', get: r => r.A ? +(r.a / r.A * 100).toFixed(2) : 0 }];
+  const covRows = [{ type: '整體', name: '全部', ...cvS.tot }, ...cvS.byS.map(x => ({ type: '分層', ...x })), ...cvS.byC.map(x => ({ type: '單位', ...x })), ...cvR.byC.map(x => ({ type: '風險', ...x }))];
+  const rep = samples.filter(s => s.replacedBy).map(s => { const t = byId.get(s.replacedBy); return { from: `#${s.seq} ${s.key}`, to: t ? `#${t.seq} ${t.key}` : '', why: s.replaceReason || '', at: fmtD(s.replacedAt) }; });
+  // [V3] 已替補上場的預備樣本改列在「正選樣本」表（並標示替補關係），「預備樣本」表只列尚未啟用者
+  const xml = toExcelXML([
+    { name: '計畫參數', cols: [{ key: 'k', label: '項目' }, { key: 'v', label: '內容' }], rows: kv },
+    { name: '正選樣本', cols: sc, rows: samples.filter(isMainList) },
+    { name: '預備樣本', cols: sc, rows: samples.filter(s => !isMainList(s)) },
+    { name: '覆蓋統計', cols: cc, rows: covRows },
+    { name: '替補紀錄', cols: [{ key: 'from', label: '被替補樣本' }, { key: 'to', label: '替補樣本' }, { key: 'why', label: '原因' }, { key: 'at', label: '時間' }], rows: rep }]);
+  download(`${APP.filePrefix}_抽樣底稿_${safeName(run.planName)}_${today()}.xls`, xml, 'application/vnd.ms-excel'); toast('已匯出抽樣底稿', 'ok');
+}
+async function printReport(run) {
+  if (!run || !run.id) run = (await syncSel(true)).run;
+  if (!run) return toast('此母體尚無抽樣紀錄，請先執行抽樣', 'err');
+  const pop = await DB.get('populations', run.popId), rows = await DB.byIndex('popRows', 'byPop', run.popId), samples0 = (await DB.byIndex('samples', 'byRun', run.id)).sort((a, b) => a.seq - b.seq);
+  const seqOf = new Map(samples0.map(s => [s.id, s.seq])), samples = samples0.map(s => ({ ...s, rel: relText(s, seqOf) }));
+  const cv = covData(rows, samples, run, 'unit'), sn = run.paramsSnapshot, tb = list => `<table><tr><th>#</th><th>角色</th><th>鍵值</th><th class="num">金額</th><th>分層</th><th>單位</th><th>入選原因</th><th>狀態</th><th>替補關係</th></tr>${list.map(s => `<tr><td>${s.seq}</td><td>${esc(s.role)}</td><td>${esc(s.key)}</td><td class="num">${fmtN(s.amount, 2)}</td><td>${esc(s.stratum)}</td><td>${esc(s.unit)}</td><td>${esc(s.reason)}</td><td>${esc(stText(s))}</td><td>${esc(s.rel)}</td></tr>`).join('')}</table>`;
+  $('#print-area').innerHTML = `<h1>佐證抽樣紀錄報告</h1><p>產出時間：${fmtD(now())}</p>
+    <table><tr><th>母體</th><td>${esc(pop?.name)}（${esc(pop?.period)}）</td><th>母體筆數／金額</th><td>${fmtN(rows.length)}／${fmtN(sum(rows.map(r => r.amount)), 2)}</td></tr>
+    <tr><th>抽樣方法</th><td>${esc(METHODS[run.method])}</td><th>種子</th><td>${esc(run.seed)}</td></tr>
+    <tr><th>n／預備 m</th><td>${sn.n}／${sn.m}</td><th>樣本（正選＋全查）</th><td>${run.sampleCount} 筆（目前筆數涵蓋 ${fmtP(cv.tot.N ? cv.tot.n / cv.tot.N : 0, 2)}，金額涵蓋 ${fmtP(cv.tot.A ? cv.tot.a / cv.tot.A : 0, 2)}）</td></tr>
+    <tr><th>母體指紋</th><td colspan="3" class="mono">${esc(run.popFingerprint)}</td></tr><tr><th>執行指紋</th><td colspan="3" class="mono">${esc(run.runHash)}</td></tr>
+    <tr><th>執行時間</th><td>${fmtD(run.createdAt)}</td><th>鎖定</th><td>${run.locked ? '已鎖定' : '未鎖定'}</td></tr></table>
+    <h2>方法說明</h2><p>${esc(METHOD_DESC[run.method])}</p>${(run.info || []).map(t => `<div>• ${esc(t)}</div>`).join('')}
+    <h2>覆蓋地圖（分層 × 單位，筆數涵蓋率）</h2>${heatmapSVG(cv, { metric: 'count' })}
+    <h2>正選／全查樣本（含替補上場的預備樣本）</h2>${tb(samples.filter(isMainList))}<h2>尚未啟用的預備樣本</h2>${tb(samples.filter(s => !isMainList(s)))}
+    <p style="margin-top:24px">製表人：＿＿＿＿＿＿＿＿　　覆核人：＿＿＿＿＿＿＿＿　　日期：＿＿＿＿＿＿＿＿</p>`;
+  window.print();
+}
+
+/* =====================================================================
+ * 11. 覆蓋地圖 ⭐
+ * ===================================================================*/
+async function renderMap(app) {
+  const ctx = await syncSel(true);
+  if (!ctx.pop) return emptyPop(app, '請先匯入母體並執行抽樣。');
+  app.innerHTML = selBar(ctx, { run: true, runScope: 'pop' }) + '<div id="m-body"></div>';
+  bindSel(app);
+  const run = ctx.run, host = $('#m-body', app);
+  if (!run) { host.innerHTML = '<div class="card empty">此母體尚無抽樣紀錄，請先到「執行與結果」執行抽樣。</div>'; return; }
+  const rows = await DB.byIndex('popRows', 'byPop', run.popId), samples = await DB.byIndex('samples', 'byRun', run.id);
+  const axis = State.mapAxis, metric = State.mapMetric, cov = covData(rows, samples, run, axis);
+  const axName = axis === 'risk' ? '風險等級' : '單位', val = x => metric === 'amount' ? (x.A ? x.a / x.A : 0) : (x.N ? x.n / x.N : 0);
+  const gaps = cov.list.filter(x => x.hi > 0 && x.n === 0).map(x => ({ id: x.s + '|' + x.c, s: x.s, c: x.c, N: x.N, A: x.A, hi: x.hi }));
+  const hasRisk = rows.some(r => String(r.risk || '').trim());
+  host.innerHTML = `<div class="stats">
+      <div class="stat"><div class="v">${fmtP(cov.tot.N ? cov.tot.n / cov.tot.N : 0, 2)}</div><div class="l">整體筆數涵蓋率（${fmtN(cov.tot.n)} ／ ${fmtN(cov.tot.N)}）</div></div>
+      <div class="stat"><div class="v">${fmtP(cov.tot.A ? cov.tot.a / cov.tot.A : 0, 2)}</div><div class="l">整體金額涵蓋率</div></div>
+      <div class="stat ${gaps.length ? 'bad' : ''}"><div class="v">${gaps.length}</div><div class="l">未涵蓋的高風險區塊</div></div></div>
+    <div class="card"><h2>覆蓋地圖：分層 × ${axName}<span class="sp"></span>
+      <select class="inp" id="m-axis"><option value="unit" ${axis === 'unit' ? 'selected' : ''}>分層 × 單位</option><option value="risk" ${axis === 'risk' ? 'selected' : ''}>分層 × 風險等級</option></select>
+      <select class="inp" id="m-metric"><option value="count" ${metric === 'count' ? 'selected' : ''}>筆數涵蓋率</option><option value="amount" ${metric === 'amount' ? 'selected' : ''}>金額涵蓋率</option></select></h2>
+      <div class="hint">格內顏色愈深＝涵蓋率愈高（以本圖最高格為基準）；格內為「涵蓋率」與「樣本／母體筆數」；無法取得的樣本不計入涵蓋；<span style="color:#e53935;font-weight:bold">紅框 ⚠</span> 表示該區塊含高風險項目（權重 ≥ ${esc(run.paramsSnapshot?.params?.highRiskWeight ?? 5)}）但完全沒有抽到。${hasRisk ? '' : '<b>（此母體未對應風險欄位，無法標示高風險區塊）</b>'}</div>
+      <div style="overflow:auto">${heatmapSVG(cov, { metric })}</div></div>
+    <div class="grid2"><div class="card"><h2>各層涵蓋率（${metric === 'amount' ? '金額' : '筆數'}）</h2>${barChart(cov.byS.map(x => ({ label: x.name, value: val(x) })), { fmt: v => fmtP(v) })}</div>
+      <div class="card"><h2>各${axName}涵蓋率（${metric === 'amount' ? '金額' : '筆數'}）</h2>${barChart(cov.byC.map(x => ({ label: x.name, value: val(x) })), { fmt: v => fmtP(v) })}</div></div>
+    <div id="m-gaps"></div>`;
+  $('#m-axis', host).onchange = e => { State.mapAxis = e.target.value; refresh(); };
+  $('#m-metric', host).onchange = e => { State.mapMetric = e.target.value; refresh(); };
+  mountGrid($('#m-gaps', host), {
+    id: 'mapGaps', title: '⚠ 未涵蓋的高風險區塊', rows: gaps, empty: '所有含高風險項目的區塊都至少抽到一筆 👍', note: '建議：增加預備樣本替補、調高風險權重，或另設分層／全查門檻後重新抽樣。',
+    cols: [{ key: 's', label: '分層' }, { key: 'c', label: axName }, { key: 'N', label: '母體筆數', num: true }, { key: 'A', label: '母體金額', num: true }, { key: 'hi', label: '高風險筆數', num: true }]
+  });
+}
+
+/* =====================================================================
+ * 12. 佐證追蹤
+ * ===================================================================*/
+async function editSample(sid) {
+  const s = await DB.get('samples', sid), files = await DB.byIndex('attachments', 'bySample', sid);
+  const body = document.createElement('div');
+  // [V3] 所有插入屬性／HTML 的 id 一律經 esc()：避免被竄改的 JSON 備份在匯入後造成 HTML 注入
+  body.innerHTML = `<div class="hint">#${esc(s.seq)}　${esc(s.key)}　${fmtN(s.amount, 2)}　${esc(s.stratum)}／${esc(s.unit)}</div>
+    <div class="row"><div class="field"><label>狀態</label><select name="status">${['待調閱', '已取得', '已查核', '無法取得'].map(t => `<option ${t === s.status ? 'selected' : ''}>${t}</option>`).join('')}</select></div>
+      <div class="field" id="res-f"><label>查核結果</label><select name="result"><option value="">（請選擇）</option>${['正常', '異常'].map(t => `<option ${t === s.result ? 'selected' : ''}>${t}</option>`).join('')}</select></div>
+      <div class="field"><label>調閱期限</label><input name="due" type="date" value="${esc(s.dueDate)}"></div></div>
+    <div class="field"><label>查核說明／發現</label><textarea name="finding">${esc(s.finding)}</textarea></div>
+    <div class="field"><label>附件（存入瀏覽器）</label><input type="file" name="files" multiple>
+      <div>${files.map(f => `<div class="row"><a href="#" data-dl="${esc(f.id)}">📎 ${esc(f.name)}</a><span class="tag">${fmtN(f.size / 1024, 1)} KB</span><button class="btn sm danger" data-rm="${esc(f.id)}" type="button">✕</button></div>`).join('')}</div></div>`;
+  const st = $('[name=status]', body), tg = () => $('#res-f', body).style.display = st.value === '已查核' ? '' : 'none'; st.onchange = tg; tg();
+  const removed = new Set();
+  body.querySelectorAll('[data-dl]').forEach(a => a.onclick = async e => { e.preventDefault(); const f = await DB.get('attachments', a.dataset.dl); download(f.name, f.blob); });
+  body.querySelectorAll('[data-rm]').forEach(b => b.onclick = () => { removed.add(b.dataset.rm); b.parentElement.style.opacity = .3; });
+  await modal({
+    title: '更新佐證狀態', body, ok: '儲存', onOk: async root => {
+      const g = n => root.querySelector(`[name=${n}]`).value.trim();
+      if (g('status') === '已查核' && !g('result')) { toast('已查核請選擇「正常」或「異常」', 'err'); return false; }
+      Object.assign(s, { status: g('status'), result: g('status') === '已查核' ? g('result') : '', finding: g('finding'), dueDate: g('due'), checkedAt: g('status') === '已查核' ? (s.checkedAt || now()) : null });
+      const nf = [...root.querySelector('[name=files]').files].map(f => ({ id: uid(), sampleId: s.id, name: f.name, mime: f.type, size: f.size, blob: f, createdAt: now() }));
+      await DB.tx(['samples', 'attachments'], t => { t.objectStore('samples').put(s); nf.forEach(f => t.objectStore('attachments').put(f)); removed.forEach(id => t.objectStore('attachments').delete(id)); });
+      toast('已儲存', 'ok'); refresh();
+    }
+  });
+}
+async function replaceSample(sid) {
+  const s = await DB.get('samples', sid), all = (await DB.byIndex('samples', 'byRun', s.runId)).sort((a, b) => a.seq - b.seq);
+  const cands = all.filter(x => x.role === '預備' && x.status === '備用');
+  if (!cands.length) return toast('沒有可用的預備樣本', 'err');
+  const same = cands.filter(x => sv(x.stratum) === sv(s.stratum)), ord = [...same, ...cands.filter(x => !same.includes(x))];
+  const body = document.createElement('div');
+  body.innerHTML = `<p>被替補樣本：<b>#${esc(s.seq)} ${esc(s.key)}</b>（${esc(s.stratum)}）。依預備順位遞補，優先使用同層預備樣本。</p>
+    ${ord.map((x, i) => `<label style="display:block;margin:4px 0"><input type="radio" name="pick" value="${esc(x.id)}" ${i === 0 ? 'checked' : ''}> #${esc(x.seq)}　${esc(x.key)}　${fmtN(x.amount)}　${esc(x.stratum)}／${esc(x.unit)} ${same.includes(x) ? '<span class="tag ok">同層</span>' : ''}</label>`).join('')}
+    <div class="field" style="margin-top:10px"><label>替補原因</label><textarea name="why">無法取得佐證</textarea></div>`;
+  await modal({
+    title: '替補樣本', body, ok: '確認替補', onOk: async root => {
+      const pick = ord.find(x => x.id === root.querySelector('[name=pick]:checked').value);
+      Object.assign(s, { status: '已替補', replacedBy: pick.id, replaceReason: root.querySelector('[name=why]').value.trim(), replacedAt: now() });
+      // 替補樣本沿用原期限；若原期限已過，改為 7 天後，避免一替補就立刻逾期
+      Object.assign(pick, { status: '待調閱', replaces: s.id, dueDate: s.dueDate && s.dueDate >= todayISO() ? s.dueDate : addDays(7) });
+      await DB.putMany('samples', [s, pick]); toast(`已由 #${pick.seq} ${pick.key} 替補`, 'ok'); refresh();
+    }
+  });
+}
+async function renderTrack(app) {
+  const ctx = await syncSel(true);
+  if (!ctx.pop) return emptyPop(app, '請先匯入母體並執行抽樣。');
+  app.innerHTML = selBar(ctx, { run: true, runScope: 'pop' }) + '<div id="t-body"></div>';
+  bindSel(app);
+  const run = ctx.run, host = $('#t-body', app);
+  if (!run) { host.innerHTML = '<div class="card empty">此母體尚無抽樣紀錄，請先到「執行與結果」執行抽樣。</div>'; return; }
+  const samples = (await DB.byIndex('samples', 'byRun', run.id)).sort((a, b) => a.seq - b.seq), att = await DB.countBy('attachments', 'bySample'), td = todayISO();
+  const seqOf = new Map(samples.map(s => [s.id, s.seq])), act = samples.filter(isActive);
+  const overdue = s => s.status === '待調閱' && s.dueDate && s.dueDate < td;
+  const f = State.trackFilter;
+  const rows = samples.map(s => ({ ...s, att: att[s.id] || 0, rel: relText(s, seqOf) }))
+    .filter(s => !f || (f === '逾期' ? overdue(s) : f === '異常' ? (s.status === '已查核' && s.result === '異常') : s.status === f));
+  const cnt = st => samples.filter(s => s.status === st).length;
+  host.innerHTML = `<div class="stats">
+      <div class="stat"><div class="v">${act.length}</div><div class="l">有效樣本（正選／全查／已啟用預備）</div></div>
+      <div class="stat"><div class="v">${cnt('待調閱')}</div><div class="l">待調閱</div></div><div class="stat"><div class="v">${cnt('已取得')}</div><div class="l">已取得</div></div>
+      <div class="stat"><div class="v">${cnt('已查核')}</div><div class="l">已查核（異常 ${samples.filter(s => s.status === '已查核' && s.result === '異常').length}）</div></div>
+      <div class="stat ${cnt('無法取得') ? 'bad' : ''}"><div class="v">${cnt('無法取得')}</div><div class="l">無法取得（待替補）</div></div>
+      <div class="stat ${samples.filter(overdue).length ? 'bad' : ''}"><div class="v">${samples.filter(overdue).length}</div><div class="l">逾期未取得</div></div>
+      <div class="stat"><div class="v">${samples.filter(s => s.role === '預備' && s.status === '備用').length}</div><div class="l">剩餘備用樣本</div></div></div>
+    <div id="t-grid"></div>`;
+  const g = mountGrid($('#t-grid', host), {
+    id: 'track', title: '佐證追蹤清單', rows, selectable: true, sortKey: 'seq', limit: 300, empty: '沒有符合條件的樣本',
+    toolbar: `<select class="inp" id="t-f"><option value="">全部狀態</option>${['待調閱', '已取得', '已查核', '異常', '無法取得', '逾期', '備用', '已替補'].map(t => `<option ${t === f ? 'selected' : ''}>${t}</option>`).join('')}</select>
+      <select class="inp" id="t-bs"><option>已取得</option><option>待調閱</option><option>無法取得</option></select><button class="btn" id="t-bapply">批次設定勾選項目</button>`,
+    cols: [{ key: 'seq', label: '#', num: true }, { key: 'role', label: '角色', html: roleTag }, { key: 'key', label: '鍵值' }, { key: 'amount', label: '金額', num: true }, { key: 'stratum', label: '分層' }, { key: 'unit', label: '單位' },
+      { key: 'dueDate', label: '調閱期限', html: s => esc(s.dueDate) + (overdue(s) ? ' <span class="tag err">逾期</span>' : '') }, { key: 'status', label: '狀態', get: stText, html: stTag },
+      { key: 'finding', label: '查核說明' }, { key: 'rel', label: '替補關係' }, { key: 'att', label: '附件', num: true, html: s => s.att ? '📎' + s.att : '' }],
+    actions: s => `${['備用', '已替補'].includes(s.status) ? '' : '<button class="btn sm" data-a="e">更新</button> '}${s.status === '無法取得' ? '<button class="btn sm gold" data-a="r">替補</button>' : ''}`,
+    onAction: (a, s) => a === 'e' ? editSample(s.id) : replaceSample(s.id)
+  });
+  $('#t-f', host).onchange = e => { State.trackFilter = e.target.value; refresh(); };
+  $('#t-bapply', host).onclick = async () => {
+    const st = $('#t-bs', host).value, sel = g.selected().filter(s => ['待調閱', '已取得', '無法取得', '已查核'].includes(s.status));
+    if (!sel.length) return toast('請先勾選要設定的樣本（備用／已替補不可設定；被篩選隱藏的不會被處理）', 'err');
+    const checkedN = sel.filter(s => s.status === '已查核').length;
+    if (!await confirmBox(`將 ${sel.length} 筆樣本設為「${st}」？${checkedN ? `其中 ${checkedN} 筆已查核，查核結果會被清除。` : ''}`, '套用')) return;
+    const orig = await Promise.all(sel.map(s => DB.get('samples', s.id)));
+    orig.forEach(o => { o.status = st; o.result = ''; o.checkedAt = null; });
+    await DB.putMany('samples', orig); GS.track.sel.clear(); toast(`已更新 ${orig.length} 筆`, 'ok'); refresh();
+  };
+}
+
+/* =====================================================================
+ * 13. 資料管理
+ * ===================================================================*/
+async function renderData(app) {
+  const counts = await Promise.all(DATA_STORES.map(async s => [s, await DB.count(s)]));
+  const names = { populations: '母體', popRows: '母體明細', plans: '計畫', runs: '抽樣執行', samples: '樣本', attachments: '附件' };
+  let est = ''; try { const e = await navigator.storage.estimate(); est = `已使用 ${fmtN(e.usage / 1048576, 1)} MB／可用 ${fmtN(e.quota / 1048576, 0)} MB`; } catch { }
+  const last = await Meta.get('lastBackup');
+  app.innerHTML = `
+    <div class="card"><h2>匯出／備份</h2><div class="row">
+      <button class="btn pri" id="m-exp">⤓ 全部資料 JSON（備份，含附件）</button>
+      <button class="btn" id="m-print">🖨 列印目前抽樣報告 / 另存 PDF</button></div>
+      <p class="hint">上次備份：${last ? fmtD(last) : '尚未備份'}</p></div>
+    <div class="card"><h2>匯入</h2><div class="row">
+      <button class="btn" id="m-merge">⤒ 匯入 JSON（合併）</button>
+      <button class="btn danger" id="m-restore">還原備份（清空後匯入）</button></div></div>
+    <div class="card"><h2>維護</h2><div class="row">
+      <button class="btn gold" id="m-sample">載入範例資料</button>
+      <button class="btn danger" id="m-clear">清除全部資料</button></div>
+      <p style="color:var(--muted)">${counts.map(([s, n]) => `${names[s]}：${fmtN(n)} 筆`).join('　')}<br>${esc(est)}</p>
+      <p style="color:var(--warn)">⚠ 資料只存在本機瀏覽器（IndexedDB）。清除瀏覽器網站資料會遺失，請定期匯出 JSON 備份；請勿使用無痕模式。</p></div>`;
+  $('#m-exp', app).onclick = exportAll;
+  $('#m-print', app).onclick = () => printReport();
+  $('#m-merge', app).onclick = () => pickImport('merge');
+  $('#m-restore', app).onclick = () => pickImport('restore');
+  $('#m-sample', app).onclick = loadSample;
+  $('#m-clear', app).onclick = async () => {
+    if (!await confirmBox('將刪除所有資料（含已鎖定的抽樣）且無法復原，確定？', '全部清除')) return;
+    await DB.tx(DATA_STORES, t => DATA_STORES.forEach(s => t.objectStore(s).clear()));
+    State.popId = State.planId = State.runId = null; Object.keys(GS).forEach(k => delete GS[k]); toast('已清除', 'ok'); refresh();
+  };
+}
+async function exportAll() {
+  const out = { app: APP.name, db: APP.dbName, version: APP.dbVersion, exportedAt: now(), data: {} };
+  for (const s of DATA_STORES) {
+    const rows = await DB.all(s);
+    out.data[s] = await Promise.all(rows.map(async r => r.blob instanceof Blob ? { ...r, blob: await blobToB64(r.blob) } : r));
+  }
+  download(`${APP.filePrefix}_全部備份_${today()}.json`, JSON.stringify(out), 'application/json');
+  await Meta.set('lastBackup', now()); toast('已匯出', 'ok');
+}
+function pickImport(mode) {
+  const inp = $('#file-import'); inp.value = '';
+  inp.onchange = async () => {
+    const f = inp.files[0]; if (!f) return;
+    try {
+      const j = JSON.parse(await readText(f));
+      if (!j.data || j.db !== APP.dbName) throw new Error('檔案格式不符（不是本工具匯出的 JSON）');
+      if (mode === 'restore' && !await confirmBox('將先清空目前所有資料再匯入，確定？', '還原')) return;
+      const rows = {};
+      for (const s of DATA_STORES) {
+        const arr = j.data[s] || [];
+        if (!Array.isArray(arr)) throw new Error(`備份檔的「${s}」格式不正確`);
+        rows[s] = arr.map(r => typeof r.blob === 'string' && r.blob.startsWith('data:') ? { ...r, blob: b64ToBlob(r.blob) } : r);
+      }
+      await DB.tx(DATA_STORES, t => DATA_STORES.forEach(s => { const os = t.objectStore(s); if (mode === 'restore') os.clear(); rows[s].forEach(r => os.put(r)); }));
+      GS.track && GS.track.sel.clear();
+      toast(`匯入完成：${DATA_STORES.map(s => `${s} ${rows[s].length}`).join('、')}`, 'ok'); refresh();
+    } catch (e) { console.error(e); toast('匯入失敗：' + e.message, 'err'); }
+  };
+  inp.click();
+}
+async function loadSample() {
+  const rng = makeRng('sample-demo-2026'), gauss = () => Math.sqrt(-2 * Math.log(rng() || 1e-9)) * Math.cos(2 * Math.PI * rng());
+  const types = [['企業授信', .35, 15.2, 1.1], ['房貸', .30, 14.2, .45], ['小額信貸', .20, 11.8, .5], ['外匯融資', .15, 14.8, .9]];
+  const units = ['台北', '板橋', '桃園', '新竹', '台中', '台南', '高雄', '花蓮'], popId = uid(), N = 480;
+  const rows = Array.from({ length: N }, (_, i) => {
+    let r = rng(), t = types[types.length - 1]; for (const x of types) { if (r < x[1]) { t = x; break; } r -= x[1]; }
+    const amount = Math.max(1000, Math.round(Math.exp(t[2] + t[3] * gauss()) / 1000) * 1000), unit = units[Math.floor(rng() ** 1.4 * units.length)];
+    const p = rng() + (amount > 1e7 ? .15 : 0), risk = p > .85 ? '高' : p > .5 ? '中' : '低', key = `LN-115-${String(i + 1).padStart(4, '0')}`;
+    return { id: `${popId}_${i + 1}`, popId, rowNo: i + 1, key, amount, stratum: t[0], unit, risk, data: { 案號: key, 金額: amount, 產品別: t[0], 分行: unit, 風險等級: risk } };
+  });
+  const sorted = rows.map(r => r.amount).sort((a, b) => b - a), th = sorted[Math.floor(N * 0.03)];
+  const pop = { id: popId, name: '範例母體：授信案件 115Q1', period: '115Q1', sourceNote: '系統產生的範例資料，可隨時刪除', columns: ['案號', '金額', '產品別', '分行', '風險等級'], fieldMap: { key: '案號', amount: '金額', stratum: '產品別', unit: '分行', risk: '風險等級' }, rowCount: N, totalAmount: sum(rows.map(r => r.amount)), fingerprint: popFingerprint(rows), createdAt: now(), updatedAt: now() };
+  const mkPlan = (name, method, n, m, seed, params = {}) => ({ id: uid(), popId, name, method, n, m, seed, note: '範例計畫', params: { ...defaultParams(), ...params }, createdAt: now(), updatedAt: now() });
+  const plans = [
+    mkPlan('範例：分層抽樣（比例配置）', 'strat', 40, 8, 'DEMO-2026', { allocation: 'prop', minPerStratum: 3 }),
+    mkPlan('範例：金額單位抽樣 MUS', 'mus', 30, 5, 'DEMO-MUS'),
+    mkPlan('範例：風險加權隨機', 'risk', 25, 5, 'DEMO-RISK'),
+    mkPlan('範例：高額全查＋其餘隨機', 'keyplus', 20, 5, 'DEMO-KEY', { keyItemThreshold: th, baseMethod: 'srs' })
+  ];
+  const r2 = await buildRun(plans[1], pop, rows, addDays(14)), r1 = await buildRun(plans[0], pop, rows, addDays(14));
+  const S = r1.samples, main = S.filter(s => s.role !== '預備'), res = S.filter(s => s.role === '預備');
+  main.forEach((s, i) => {
+    if (i < 18) { s.status = '已查核'; s.result = i % 7 === 3 ? '異常' : '正常'; s.checkedAt = now(); if (s.result === '異常') s.finding = '範例：佐證日期晚於撥款日，請分行補充說明'; }
+    else if (i < 26) s.status = '已取得';
+    else if (i < 28) s.status = '無法取得';
+    else if (i < 33) s.dueDate = addDays(-3 - i % 4);
+  });
+  const bad = main[26], pick = res.find(x => sv(x.stratum) === sv(bad.stratum)) || res[0];
+  Object.assign(bad, { status: '已替補', replacedBy: pick.id, replaceReason: '範例：分行表示檔案已歸檔，無法取得', replacedAt: now() });
+  Object.assign(pick, { status: '待調閱', replaces: bad.id, dueDate: addDays(7) });
+  await DB.tx(['populations', 'popRows', 'plans', 'runs', 'samples'], t => {
+    t.objectStore('populations').put(pop); rows.forEach(r => t.objectStore('popRows').put(r)); plans.forEach(p => t.objectStore('plans').put(p));
+    [r1, r2].forEach(x => { t.objectStore('runs').put(x.run); x.samples.forEach(s => t.objectStore('samples').put(s)); });
+  });
+  State.popId = popId; State.planId = plans[0].id; State.runId = r1.run.id;
+  toast('已載入範例資料：480 筆母體、4 個計畫、2 次抽樣', 'ok');
+  if (State.page === 'dash' || State.page === 'data') refresh(); else location.hash = 'dash';
+}
+
+/* =====================================================================
+ * 14. 使用說明
+ * ===================================================================*/
+function renderHelp(app) {
+  app.innerHTML = `<div class="card help"><h2>使用說明</h2>
+    <h3>一、快速開始</h3><ol>
+      <li>直接用 Edge／Chrome 開啟本 HTML 檔，不需安裝、不需網路；資料只存在本機瀏覽器（IndexedDB），不會上傳。V3 沿用 V1／V2 的資料庫，舊資料可直接使用。</li>
+      <li><b>母體管理</b>：貼上 Excel 表格（含標題列）或選 CSV，對應「鍵值、金額、分層、單位、風險」欄位後匯入。系統會計算母體指紋。</li>
+      <li><b>抽樣計畫</b>：選方法、設樣本數 n、預備數 m 與種子；可先用「樣本數試算」，並在「配置預覽」確認各層配置。</li>
+      <li><b>執行與結果</b>：按「執行抽樣」，每筆樣本都附入選原因；確認無誤後「鎖定結果」，並可匯出「抽樣底稿 Excel」或列印報告。</li>
+      <li><b>覆蓋地圖</b>：檢查分層 × 單位（或風險）的涵蓋率，紅框 ⚠ 是含高風險項目卻沒抽到的區塊；無法取得的樣本不計入涵蓋。</li>
+      <li><b>佐證追蹤</b>：逐筆更新調閱狀態、上傳附件、填查核結果；無法取得時按「替補」由預備樣本遞補。</li></ol>
+    <h3>二、抽樣方法</h3><table><tr><th>方法</th><th>說明</th></tr>
+      ${Object.keys(METHODS).map(k => `<tr><td>${esc(METHODS[k])}</td><td>${esc(METHOD_DESC[k])}</td></tr>`).join('')}</table>
+    <h3>三、可重現與防竄改</h3><ul>
+      <li>亂數使用 xmur3＋mulberry32；母體依鍵值排序後再抽，因此「相同種子＋相同母體＋相同參數」永遠得到相同樣本，與匯入列順序無關。</li>
+      <li>母體指紋＝SHA-256(依鍵值排序後的「鍵值＋金額」)；執行指紋＝SHA-256(母體指紋＋方法＋參數＋種子＋樣本清單)。</li>
+      <li>「驗證重現」會以儲存的種子與參數重新抽樣並比對；若母體被「重新匯入（覆蓋）」而指紋改變，系統會警示「母體已變動，無法重現原抽樣」。母體指紋只涵蓋鍵值與金額，若事後改了分層／單位／風險欄位，「驗證重現」會顯示結果不同。</li>
+      <li>已鎖定的抽樣結果不能刪除或重抽；若需重抽，請修改種子後另建一次新的抽樣。刪除含已鎖定抽樣的母體需輸入「刪除」二字確認。</li></ul>
+    <h3>四、樣本數試算</h3><ul><li>屬性抽樣（預期零誤差）：n = ⌈ ln(1−信賴水準) ／ ln(1−可容忍偏差率) ⌉，例如 95%、5% → 59。</li>
+      <li>金額單位抽樣：n = ⌈ 母體總額 × 信賴係數 ／ 可容忍誤述 ⌉（係數 90%＝2.31、95%＝3.0、99%＝4.61）。</li></ul>
+    <h3>五、樣本狀態與替補</h3><p>待調閱 → 已取得 → 已查核（正常／異常）；或 待調閱 → 無法取得 → 已替補。預備樣本平時為「備用」，替補後轉為「待調閱」，並在匯出的 Excel 底稿中改列於「正選樣本」表（標示「替補 #n」）；「預備樣本」表只列尚未啟用者。替補優先使用同層預備樣本，並記錄原因與時間。</p>
+    <h3>六、匯出注意事項</h3><ul>
+      <li><b>CSV</b> 以 Excel 開啟時，前面有 0 的鍵值（例：00123）或超過 15 位的數字會被轉成數字；需要保留原樣請使用「Excel」匯出（.xls）。</li>
+      <li>以 = + - @ 開頭的文字在 CSV 中會自動加上單引號，避免被當成公式執行。</li>
+      <li>母體清單匯出的「母體指紋」是完整 64 碼，畫面上只顯示前 12 碼。</li></ul>
+    <h3>七、常見問題</h3><ul>
+      <li><b>金額為負數或 0？</b>MUS 以絕對值計算，金額為 0 的項目不會被 MUS 抽中，執行時會提示。金額可寫成 -1,000、(1,000)、1,000-、-$1,000、1.2E+6 等格式。</li>
+      <li><b>分層抽樣的總數比 n 多？</b>每層最低抽樣數優先配置，若所有層的最低數相加超過 n，總數會大於 n。</li>
+      <li><b>鍵值重複？</b>匯入時會自動加上 #2、#3 後綴並提醒。</li>
+      <li><b>資料會不會不見？</b>清除瀏覽器網站資料或使用無痕模式會遺失，請定期於「資料管理」匯出 JSON 備份。</li></ul>
+    <h3>八、修正紀錄</h3><p><b>V3</b></p><ul>
+      <li>修正：金額「-$1,000」「-NT$1,000」（負號在貨幣符號前）被誤判為正數。</li>
+      <li>修正：清單表頭的「全選」勾選框無法再按一次取消全選。</li>
+      <li>修正：刪除抽樣紀錄後，畫面會誤跳到另一個計畫；同一計畫還有其他抽樣時，下拉選單與畫面不一致。</li>
+      <li>修正：替補上場的預備樣本在 Excel 底稿與列印報告中被列在「預備樣本」，正選樣本表不完整；現已改列正選並加「替補關係」欄。</li>
+      <li>修正：母體清單匯出的指紋被截成 12 碼，現匯出完整 64 碼。</li>
+      <li>安全：備份檔內的編號（樣本、附件）插入畫面前一律跳脫，避免被竄改的 JSON 造成 HTML 注入；匯入時也會檢查各資料表是否為陣列。</li>
+      <li>改善：文字欄位排序改為自然排序（K2 排在 K10 之前）。</li></ul>
+    <p><b>V2</b></p><ul>
+      <li>修正：10 萬筆以上母體開啟「母體管理」當掉；覆蓋地圖／佐證追蹤誤報「尚無抽樣紀錄」；對話框確定鍵可連點；批次設定誤改被篩選隱藏的樣本；快速切頁畫面錯亂；涵蓋率不隨替補更新；工具列列印找不到抽樣。</li>
+      <li>強化：CSV 公式注入防護、Excel 匯出移除非法控制字元、刪除含鎖定抽樣的母體需二次確認、MUS／風險加權抽不滿 n 筆時提示。</li></ul></div>`;
+}
+
+/* =====================================================================
+ * 15. 啟動
+ * ===================================================================*/
+(async function boot() {
+  try { await DB.open(); }
+  catch (e) {
+    $('#app').innerHTML = `<div class="card"><h2>無法開啟 IndexedDB</h2><p>${esc(e.message || e)}</p><p>請勿使用無痕（InPrivate）模式，或洽資訊人員確認瀏覽器是否封鎖本機儲存。</p></div>`;
+    return;
+  }
+  try { await navigator.storage?.persist?.(); } catch { }
+  const sel = await Meta.get('sel'); if (sel) { State.popId = sel.popId; State.planId = sel.planId; State.runId = sel.runId; }
+  $('#tb-import').onclick = () => pickImport('merge');
+  $('#tb-export').onclick = exportAll;
+  $('#tb-print').onclick = () => printReport();
+  const last = location.hash.slice(1) || await Meta.get('lastPage', 'dash');
+  if (location.hash.slice(1) !== last) location.hash = last; else go(last);
+})();
+window.addEventListener('error', e => toast('錯誤：' + e.message, 'err'));
+window.addEventListener('unhandledrejection', e => toast('錯誤：' + (e.reason?.message || e.reason), 'err'));
+</script>
+</body>
+</html>

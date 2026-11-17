@@ -1,0 +1,1509 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>佐證鏈稽核工作室</title>
+<style>
+/* ===== 主題：改這幾個變數即可換色 ===== */
+:root{
+  --primary:#8a1538; --primary-d:#6b0f2b; --accent:#c9a24b; --accent-l:#f6edd8;
+  --bg:#f6f4f2; --card:#fff; --text:#2b2b2b; --muted:#777; --line:#e3dfdb;
+  --ok:#2e7d32; --warn:#b26a00; --err:#c62828; --radius:10px;
+  font-family:"Microsoft JhengHei","PingFang TC","Noto Sans TC",system-ui,sans-serif;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-size:14px}
+button,input,select,textarea{font:inherit}
+.topbar{position:sticky;top:0;z-index:10;display:flex;align-items:center;gap:10px;height:52px;padding:0 16px;background:var(--primary);color:#fff;box-shadow:0 2px 6px #0003}
+.topbar h1{font-size:17px;margin:0 12px 0 0;white-space:nowrap}
+.topbar .sp{flex:1}
+.topbar select{background:#ffffff22;color:#fff;border:1px solid #ffffff55;border-radius:6px;padding:5px 8px;max-width:300px}
+.topbar select option{color:#222}
+.layout{display:flex;min-height:calc(100vh - 52px)}
+nav.side{width:200px;flex:none;background:#fff;border-right:1px solid var(--line);padding:10px 0}
+nav.side .grp{font-size:12px;color:var(--muted);padding:12px 18px 4px}
+nav.side a{display:block;padding:8px 18px;color:var(--text);text-decoration:none;border-left:3px solid transparent}
+nav.side a:hover{background:var(--accent-l)}
+nav.side a.on{border-left-color:var(--accent);background:var(--accent-l);color:var(--primary);font-weight:bold}
+main{flex:1;padding:18px 22px;min-width:0}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:16px;margin-bottom:16px}
+.card h2{font-size:16px;margin:0 0 12px;color:var(--primary);display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.card h2 .sp{flex:1}
+.card h3{font-size:14px;margin:14px 0 6px;color:var(--primary-d)}
+.btn{border:1px solid var(--line);background:#fff;color:var(--text);padding:6px 12px;border-radius:6px;cursor:pointer}
+.btn:hover{border-color:var(--accent)}
+.btn.pri{background:var(--primary);border-color:var(--primary);color:#fff}
+.btn.pri:hover{background:var(--primary-d)}
+.btn.gold{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn.danger{color:var(--err);border-color:#e9b4b4}
+.btn.sm{padding:3px 8px;font-size:12px}
+.btn[disabled]{opacity:.5;cursor:not-allowed}
+.topbar .btn{background:transparent;color:#fff;border-color:#ffffff55}
+.topbar .btn:hover{background:#ffffff22}
+table.grid{width:100%;border-collapse:collapse}
+table.grid th,table.grid td{border-bottom:1px solid var(--line);padding:7px 8px;text-align:left;vertical-align:top}
+table.grid th{background:#faf7f2;color:var(--primary-d);font-weight:600;cursor:default;white-space:nowrap}
+table.grid th[data-sort]{cursor:pointer}
+table.grid tr:hover td{background:#fdfbf7}
+table.grid tr.sel td{background:var(--accent-l)}
+.num{text-align:right!important;font-variant-numeric:tabular-nums}
+.tag{display:inline-block;padding:1px 8px;border-radius:10px;font-size:12px;background:#eee;white-space:nowrap}
+.tag.ok{background:#e6f4ea;color:var(--ok)}.tag.warn{background:#fff4e0;color:var(--warn)}.tag.err{background:#fdecea;color:var(--err)}.tag.gold{background:var(--accent-l);color:#7a5a10}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin-bottom:16px}
+.stat{background:#fff;border:1px solid var(--line);border-top:3px solid var(--accent);border-radius:var(--radius);padding:12px 14px}
+.stat.bad{border-top-color:var(--err)}
+.stat .v{font-size:26px;font-weight:bold;color:var(--primary)}
+.stat.bad .v{color:var(--err)}
+.stat .l{color:var(--muted);font-size:12px}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.field{display:flex;flex-direction:column;gap:4px;margin-bottom:10px}
+.field label{font-size:12px;color:var(--muted)}
+.field input,.field select,.field textarea,input.inp,select.inp{border:1px solid var(--line);border-radius:6px;padding:6px 8px;background:#fff;min-width:0}
+.field textarea{min-height:70px;resize:vertical}
+.empty{text-align:center;color:var(--muted);padding:30px}
+.muted{color:var(--muted)}
+.mono{font-family:Consolas,monospace}
+/* modal */
+.mask{position:fixed;inset:0;background:#0006;display:flex;align-items:center;justify-content:center;z-index:100}
+.modal{background:#fff;border-radius:var(--radius);width:min(560px,94vw);max-height:90vh;display:flex;flex-direction:column;box-shadow:0 10px 40px #0005}
+.modal header{padding:12px 16px;border-bottom:1px solid var(--line);font-weight:bold;color:var(--primary);display:flex}
+.modal header .x{margin-left:auto;cursor:pointer;border:0;background:none;font-size:18px}
+.modal .body{padding:16px;overflow:auto}
+.modal footer{padding:10px 16px;border-top:1px solid var(--line);display:flex;justify-content:flex-end;gap:8px}
+#toast{position:fixed;right:18px;bottom:18px;display:flex;flex-direction:column;gap:8px;z-index:200}
+#toast div{background:#333;color:#fff;padding:9px 14px;border-radius:6px;box-shadow:0 3px 10px #0004;animation:fi .2s;max-width:420px}
+#toast div.err{background:var(--err)}#toast div.ok{background:var(--ok)}
+@keyframes fi{from{opacity:0;transform:translateY(8px)}}
+/* 節點工作台 */
+.wb{display:grid;grid-template-columns:270px minmax(0,1fr) 310px;gap:14px;align-items:start}
+.wb .card{margin-bottom:0}
+.nlist{max-height:68vh;overflow:auto;margin:0 -6px}
+.nitem{display:flex;gap:6px;align-items:center;padding:6px;border-radius:6px;cursor:pointer;border-left:3px solid transparent}
+.nitem:hover{background:var(--accent-l)}
+.nitem.on{background:var(--accent-l);border-left-color:var(--primary)}
+.nitem .cd{font-family:Consolas,monospace;font-size:12px;color:var(--muted);min-width:28px}
+.nitem .tt{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.chips{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:8px}
+.chip{border:1px solid var(--line);background:#fff;border-radius:12px;padding:2px 9px;font-size:12px;cursor:pointer}
+.chip.on{background:var(--primary);color:#fff;border-color:var(--primary)}
+.issue{display:flex;gap:6px;padding:5px 8px;border-radius:6px;margin-bottom:4px;font-size:13px}
+.issue.err{background:#fdecea;color:var(--err)}.issue.warn{background:#fff4e0;color:var(--warn)}.issue.ok{background:#e6f4ea;color:var(--ok)}
+.lk{display:flex;gap:6px;align-items:center;padding:4px 0;border-bottom:1px dashed var(--line)}
+.lk .tt{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:pointer}
+.lk .tt:hover{color:var(--primary);text-decoration:underline}
+.form2{display:grid;grid-template-columns:1fr 1fr;gap:0 12px}
+.form2 .full{grid-column:1/-1}
+/* 地圖 */
+.map-wrap{overflow:auto;border:1px solid var(--line);border-radius:var(--radius);background:#fff;max-height:72vh}
+.map-wrap svg{display:block}
+.mnode{cursor:pointer}
+.mnode.dim,.edge.dim,.stub.dim{opacity:.18}
+.mnode:hover rect.bx{filter:brightness(.96)}
+.edge{fill:none;stroke:#a89f98;stroke-width:1.5}
+.edge.hl{stroke:#8a1538;stroke-width:2.6}
+.edge.hl2{stroke:#1565c0;stroke-width:2.2}
+.stub{stroke:#c62828;stroke-width:2;stroke-dasharray:5 4}
+.legend{display:flex;gap:12px;flex-wrap:wrap;font-size:12px;color:var(--muted);margin:6px 0}
+.legend i{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:4px;vertical-align:-2px}
+.formula-chip{display:inline-block;border:1px solid var(--line);border-radius:6px;padding:1px 7px;margin:2px;font-size:12px;cursor:pointer;background:#fafafa}
+.formula-chip:hover{border-color:var(--accent)}
+pre.letter{white-space:pre-wrap;background:#faf7f2;border:1px solid var(--line);border-radius:6px;padding:10px;font-family:inherit;max-height:50vh;overflow:auto}
+.rpt h1{color:var(--primary);font-size:20px;margin:0 0 8px}
+.rpt h2{color:var(--primary-d);font-size:15px;border-bottom:2px solid var(--accent);padding-bottom:3px;margin:16px 0 8px}
+.rpt table{width:100%;border-collapse:collapse;margin-bottom:8px}
+.rpt td,.rpt th{border:1px solid #bbb;padding:4px 6px;text-align:left;vertical-align:top;font-size:12px}
+.rpt th{background:#f3ece0}
+@media (max-width:1100px){.wb{grid-template-columns:1fr}}
+#print-area{display:none}
+@media print{
+  body>*:not(#print-area){display:none!important}
+  #print-area{display:block;font-size:12px;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  #print-area .rpt h2{break-after:avoid}
+  #print-area .rpt table{break-inside:auto}
+  #print-area .rpt tr{break-inside:avoid}
+  @page{size:A4;margin:14mm}
+}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <h1>🔗 佐證鏈稽核工作室</h1>
+  <label style="font-size:12px;opacity:.85">當前案件</label>
+  <select id="case-sel" title="切換當前案件"></select>
+  <span class="sp"></span>
+  <button class="btn" id="tb-import">⤒ 匯入</button>
+  <button class="btn" id="tb-export">⤓ 匯出</button>
+  <button class="btn" id="tb-print">🖨 報告</button>
+</div>
+<div class="layout">
+  <nav class="side" id="nav"></nav>
+  <main id="app"><div class="empty">載入中…</div></main>
+</div>
+<div id="toast"></div>
+<div id="print-area"></div>
+<input type="file" id="file-import" accept=".json,application/json" hidden>
+<input type="file" id="file-csv" accept=".csv,.tsv,.txt,text/csv,text/plain" hidden>
+<script>
+'use strict';
+/* =====================================================================
+ * 0. 設定區
+ * ===================================================================*/
+const APP = {
+  name: '佐證鏈稽核工作室',
+  dbName: 'bot-evidence-chain',
+  dbVersion: 1,
+  filePrefix: '佐證鏈稽核工作室',
+  maxAttach: 25 * 1048576
+};
+const SCHEMA = {
+  meta:        { keyPath: 'key' },
+  cases:       { keyPath: 'id', indexes: { byStatus: 'status', byDue: 'dueDate' } },
+  nodes:       { keyPath: 'id', indexes: { byCase: 'caseId', byType: 'type', byCaseType: ['caseId', 'type'] } },
+  links:       { keyPath: 'id', indexes: { byCase: 'caseId', byFrom: 'fromId', byTo: 'toId' } },
+  datasets:    { keyPath: 'id', indexes: { byCase: 'caseId' } },
+  reviews:     { keyPath: 'id', indexes: { byNode: 'nodeId', byCase: 'caseId' } },
+  attachments: { keyPath: 'id', indexes: { byNode: 'nodeId', byCase: 'caseId' } }
+};
+const DATA_STORES = ['cases', 'nodes', 'links', 'datasets', 'reviews', 'attachments'];
+
+const TYPES = {
+  claim:    { label: '結論', icon: '🎯', color: '#8a1538', bg: '#fbeef2', prefix: 'C', order: 0 },
+  number:   { label: '數字', icon: '🔢', color: '#b26a00', bg: '#fff6e5', prefix: 'N', order: 1 },
+  calc:     { label: '計算', icon: '⚙️', color: '#1565c0', bg: '#e8f1fb', prefix: 'K', order: 2 },
+  data:     { label: '資料', icon: '📊', color: '#2e7d32', bg: '#e9f6ea', prefix: 'D', order: 3 },
+  evidence: { label: '佐證', icon: '📎', color: '#6a4c93', bg: '#f1ecf8', prefix: 'E', order: 4 }
+};
+const REL = { references: '引用', derived_from: '推導自', supported_by: '佐證自' };
+const RSTAT = { unreviewed: ['未覆核', ''], pass: ['通過', 'ok'], fix: ['需補件', 'warn'], reject: ['退回', 'err'] };
+const CASE_STATUS = ['規劃中', '進行中', '覆核中', '已結案'];
+const RULES = {
+  R0: { label: '結論無佐證鏈', level: 'err' },
+  R1: { label: '無來源數字', level: 'err' },
+  R2: { label: '核驗不符', level: 'err' },
+  R3: { label: '空佐證', level: 'warn' },
+  R4: { label: '孤立節點', level: 'warn' },
+  R5: { label: '需重新覆核', level: 'warn' },
+  R6: { label: '循環引用', level: 'err' },
+  RV: { label: '覆核退回／需補件', level: 'err' }
+};
+const hasOwn = (o, k) => Object.prototype.hasOwnProperty.call(o, k);
+
+/* =====================================================================
+ * 1. IndexedDB 封裝
+ * ===================================================================*/
+const DB = {
+  db: null,
+  open() {
+    return new Promise((res, rej) => {
+      if (!('indexedDB' in window)) return rej(new Error('此瀏覽器不支援 IndexedDB'));
+      const rq = indexedDB.open(APP.dbName, APP.dbVersion);
+      rq.onupgradeneeded = () => {
+        const db = rq.result, tx = rq.transaction;
+        for (const [name, def] of Object.entries(SCHEMA)) {
+          const os = db.objectStoreNames.contains(name) ? tx.objectStore(name)
+                   : db.createObjectStore(name, { keyPath: def.keyPath });
+          for (const [ix, path] of Object.entries(def.indexes || {}))
+            if (!os.indexNames.contains(ix)) os.createIndex(ix, path);
+        }
+      };
+      rq.onsuccess = () => { this.db = rq.result; this.db.onversionchange = () => { this.db.close(); toast('資料庫已在其他分頁更新，請重新整理', 'err'); }; res(this.db); };
+      rq.onerror = () => rej(rq.error);
+      rq.onblocked = () => toast('請關閉本工具的其他分頁後重新整理', 'err');
+    });
+  },
+  _p: rq => new Promise((res, rej) => { rq.onsuccess = () => res(rq.result); rq.onerror = () => rej(rq.error); }),
+  store(name, mode = 'readonly') { return this.db.transaction(name, mode).objectStore(name); },
+  get(s, k)         { return this._p(this.store(s).get(k)); },
+  all(s)            { return this._p(this.store(s).getAll()); },
+  byIndex(s, ix, v) { return this._p(this.store(s).index(ix).getAll(v)); },
+  count(s)          { return this._p(this.store(s).count()); },
+  put(s, v)         { return this._p(this.store(s, 'readwrite').put(v)); },
+  del(s, k)         { return this._p(this.store(s, 'readwrite').delete(k)); },
+  clear(s)          { return this._p(this.store(s, 'readwrite').clear()); },
+  tx(stores, fn) {
+    return new Promise((res, rej) => {
+      const t = this.db.transaction(stores, 'readwrite');
+      let out; try { out = fn(t); } catch (e) { t.abort(); return rej(e); }
+      t.oncomplete = () => res(out); t.onerror = () => rej(t.error); t.onabort = () => rej(t.error || new Error('交易中止'));
+    });
+  },
+  async putMany(s, arr) { return this.tx([s], t => { const os = t.objectStore(s); arr.forEach(v => os.put(v)); }); }
+};
+const Meta = {
+  async get(k, d = null) { const r = await DB.get('meta', k); return r ? r.value : d; },
+  set(k, v) { return DB.put('meta', { key: k, value: v }); }
+};
+
+/* =====================================================================
+ * 2. 共用工具
+ * ===================================================================*/
+const $ = (s, el = document) => el.querySelector(s);
+const $$ = (s, el = document) => [...el.querySelectorAll(s)];
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+const now = () => new Date().toISOString();
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const fmtN = (n, d = 0) => (n == null || n === '' || isNaN(n)) ? '' : Number(n).toLocaleString('zh-TW', { minimumFractionDigits: d, maximumFractionDigits: d });
+const fmtV = n => (n == null || n === '' || isNaN(n)) ? '' : Number(n).toLocaleString('zh-TW', { maximumFractionDigits: 6 });
+const fmtD = iso => { if (!iso) return ''; const d = new Date(iso); return isNaN(d) ? String(iso) : d.toLocaleString('zh-TW', { hourCycle: 'h23' }); };
+const fmtROC = d => { if (!d) return ''; const m = String(d).match(/^(\d{4})-(\d{2})-(\d{2})/); return m ? `${+m[1] - 1911}年${+m[2]}月${+m[3]}日` : d; };
+const today = () => { const d = new Date(); return `${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, '0')}${String(d.getDate()).padStart(2, '0')}`; };
+const todayISO = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; };
+const addDays = n => { const d = new Date(); d.setDate(d.getDate() + n); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; };
+const safeName = s => String(s).replace(/[\\/:*?"<>|]/g, '_');
+const trunc = (s, n) => { s = String(s ?? ''); return s.length > n ? s.slice(0, n - 1) + '…' : s; };
+function toast(msg, type = '') {
+  const d = document.createElement('div'); d.className = type; d.textContent = msg;
+  $('#toast').appendChild(d); setTimeout(() => d.remove(), type === 'err' ? 5000 : 2800);
+}
+function modal({ title, body, ok = '確定', cancel = '取消', onOk, wide }) {
+  return new Promise(resolve => {
+    const m = document.createElement('div'); m.className = 'mask';
+    m.innerHTML = `<div class="modal" style="${wide ? 'width:min(960px,96vw)' : ''}"><header>${esc(title)}<button class="x" title="關閉 (Esc)">✕</button></header>
+      <div class="body"></div><footer>${cancel ? `<button class="btn" data-c>${esc(cancel)}</button>` : ''}${ok ? `<button class="btn pri" data-o>${esc(ok)}</button>` : ''}</footer></div>`;
+    const b = $('.body', m); typeof body === 'string' ? (b.innerHTML = body) : b.appendChild(body);
+    const close = v => { document.removeEventListener('keydown', onKey); m.remove(); resolve(v); };
+    const onKey = e => { if (e.key === 'Escape') close(false); };
+    document.addEventListener('keydown', onKey);
+    $('.x', m).onclick = () => close(false);
+    const c = $('[data-c]', m); if (c) c.onclick = () => close(false);
+    const o = $('[data-o]', m);
+    if (o) o.onclick = async () => {
+      try { if (onOk && (await onOk(b)) === false) return; close(true); }
+      catch (e) { console.error(e); toast(e.message || String(e), 'err'); }
+    };
+    document.body.appendChild(m);
+    const f = $('input,select,textarea', b); if (f) f.focus();
+  });
+}
+const confirmBox = (msg, ok = '確定') => modal({ title: '確認', body: `<p>${esc(msg)}</p>`, ok });
+function download(name, content, mime = 'application/octet-stream') {
+  const blob = content instanceof Blob ? content : new Blob([content], { type: mime });
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = safeName(name);
+  document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+}
+/* CSV：加 BOM；字串若以 = + - @ 開頭（且不是純數字）前置單引號，避免 Excel 把它當公式執行 */
+function toCSV(rows, cols) {
+  const q = v => {
+    v = v ?? '';
+    if (typeof v === 'string' && /^[=+\-@\t\r]/.test(v) && toNum(v) == null) v = "'" + v;
+    v = String(v); return /[",\n\r]/.test(v) ? `"${v.replace(/"/g, '""')}"` : v;
+  };
+  return '\uFEFF' + [cols.map(c => q(c.label)).join(','), ...rows.map(r => cols.map(c => q(typeof c.get === 'function' ? c.get(r) : r[c.key])).join(','))].join('\r\n');
+}
+function toExcelXML(sheets) {
+  const x = s => esc(s).replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, '').replace(/\n/g, '&#10;');
+  const cell = v => (typeof v === 'number' && isFinite(v)) ? `<Cell><Data ss:Type="Number">${v}</Data></Cell>` : `<Cell><Data ss:Type="String">${x(v ?? '')}</Data></Cell>`;
+  const ws = sheets.map(s => `<Worksheet ss:Name="${x(String(s.name).replace(/[\\/?*\[\]:]/g, '_').slice(0, 31))}"><Table>
+<Row>${s.cols.map(c => `<Cell ss:StyleID="h"><Data ss:Type="String">${x(c.label)}</Data></Cell>`).join('')}</Row>
+${s.rows.map(r => `<Row>${s.cols.map(c => cell(typeof c.get === 'function' ? c.get(r) : r[c.key])).join('')}</Row>`).join('\n')}
+</Table></Worksheet>`).join('\n');
+  return `<?xml version="1.0" encoding="UTF-8"?><?mso-application progid="Excel.Sheet"?>
+<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">
+<Styles><Style ss:ID="h"><Font ss:Bold="1" ss:Color="#FFFFFF"/><Interior ss:Color="#8A1538" ss:Pattern="Solid"/></Style></Styles>
+${ws}</Workbook>`;
+}
+const blobToB64 = b => new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result); r.onerror = rej; r.readAsDataURL(b); });
+const b64ToBlob = d => { const [h, b] = d.split(','), bin = atob(b), u = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i); return new Blob([u], { type: (h.match(/data:([^;]*)/) || [])[1] || '' }); };
+const readText = f => new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result); r.onerror = rej; r.readAsText(f, 'utf-8'); });
+function barChart(data, { width = 560, barH = 22, color = '#8a1538', fmt = v => fmtN(v), max: fixedMax } = {}) {
+  if (!data.length) return '<div class="empty">無資料</div>';
+  const max = fixedMax || Math.max(...data.map(d => Math.abs(d.value)), 1), lw = 150, h = data.length * (barH + 8) + 8;
+  return `<svg viewBox="0 0 ${width} ${h}" width="100%" style="max-width:${width}px">${data.map((d, i) => {
+    const y = 8 + i * (barH + 8), w = Math.max(2, (width - lw - 70) * Math.min(Math.abs(d.value), max) / max);
+    return `<text x="${lw - 6}" y="${y + barH * .7}" text-anchor="end" font-size="12">${esc(trunc(d.label, 12))}</text>
+      <rect x="${lw}" y="${y}" width="${w}" height="${barH}" rx="3" fill="${d.color || color}"><title>${esc(d.label)}：${esc(fmt(d.value))}</title></rect>
+      <text x="${lw + w + 6}" y="${y + barH * .7}" font-size="12">${esc(fmt(d.value))}</text>`;
+  }).join('')}</svg>`;
+}
+async function copyText(t) {
+  try { await navigator.clipboard.writeText(t); return true; }
+  catch { const ta = document.createElement('textarea'); ta.value = t; document.body.appendChild(ta); ta.select(); let ok = false; try { ok = document.execCommand('copy'); } catch { } ta.remove(); return ok; }
+}
+function sortRows(rows, st, cols) {
+  const col = cols.find(c => c.key === st.key); if (!col) return rows;
+  const val = r => typeof col.sortVal === 'function' ? col.sortVal(r) : typeof col.get === 'function' ? col.get(r) : r[col.key];
+  return rows.slice().sort((a, b) => {
+    const x = val(a) ?? '', y = val(b) ?? '';
+    return (typeof x === 'number' && typeof y === 'number' ? x - y : String(x).localeCompare(String(y), 'zh-Hant', { numeric: true })) * st.dir;
+  });
+}
+const thHtml = (cols, st) => cols.map(c => `<th data-sort="${c.key}" class="${c.num ? 'num' : ''}">${esc(c.label)}${st.key === c.key ? (st.dir > 0 ? ' ▲' : ' ▼') : ''}</th>`).join('');
+function bindSort(root, st, again) { $$('th[data-sort]', root).forEach(th => th.onclick = () => { const k = th.dataset.sort; st.dir = st.key === k ? -st.dir : 1; st.key = k; again(); }); }
+const tagHtml = (txt, cls = '') => `<span class="tag ${cls}">${esc(txt)}</span>`;
+const typeTag = t => `<span class="tag" style="background:${TYPES[t].bg};color:${TYPES[t].color}">${TYPES[t].icon} ${TYPES[t].label}</span>`;
+const rstatTag = s => { const r = RSTAT[s || 'unreviewed']; return tagHtml(r[0], r[1]); };
+/* 嚴格數字解析：空白／純空格／0x10／1e／中文字都回 null（避免 Number(' ')=0 的陷阱） */
+const toNum = v => {
+  if (v == null) return null;
+  if (typeof v === 'number') return Number.isFinite(v) ? v : null;
+  const s = String(v).replace(/,/g, '').trim();
+  if (!/^[+-]?(\d+(\.\d*)?|\.\d+)([eE][+-]?\d+)?$/.test(s)) return null;
+  const n = Number(s); return Number.isFinite(n) ? n : null;
+};
+/* 四捨五入：與 Excel 一致（half away from zero），避免 1.005 → 1.00 的浮點誤差 */
+const roundTo = (x, n) => {
+  n = Math.max(-15, Math.min(15, Math.trunc(Number(n) || 0)));
+  if (!Number.isFinite(x)) return x;
+  const s = x < 0 ? -1 : 1, a = Math.abs(x), f = Math.pow(10, n);
+  let r = /e/i.test(String(a)) ? NaN : Number(Math.round(Number(String(a) + 'e' + n)) + 'e' + (-n));
+  if (!Number.isFinite(r)) r = Math.round(a * f) / f;
+  r = s * r; return r === 0 ? 0 : r;
+};
+
+/* =====================================================================
+ * 3. 公式引擎（安全解析器，不使用 eval）
+ * 支援：數字、{節點代號}、+ - * / ( )、SUM、ROUND、ABS；全形符號自動轉半形
+ * ===================================================================*/
+const FW = { '，': ',', '、': ',', '（': '(', '）': ')', '＋': '+', '－': '-', '−': '-', '＊': '*', '×': '*', '÷': '/', '／': '/', '｛': '{', '｝': '}', '．': '.' };
+const normFormula = s => String(s ?? '').replace(/[０-９]/g, c => String.fromCharCode(c.charCodeAt(0) - 0xFEE0)).replace(/[，、（）＋－−＊×÷／｛｝．]/g, c => FW[c]);
+function tokenize(src) {
+  const t = []; let i = 0; src = normFormula(src);
+  while (i < src.length) {
+    const ch = src[i];
+    if (/\s/.test(ch)) { i++; continue; }
+    let m;
+    if ((m = /^(\d+(\.\d+)?|\.\d+)/.exec(src.slice(i)))) { t.push({ k: 'num', v: parseFloat(m[1]) }); i += m[1].length; continue; }
+    if (ch === '{') { const j = src.indexOf('}', i); if (j < 0) throw new Error('缺少右大括號 }'); t.push({ k: 'ref', v: src.slice(i + 1, j).trim() }); i = j + 1; continue; }
+    if ((m = /^[A-Za-z_]+/.exec(src.slice(i)))) { t.push({ k: 'id', v: m[0].toUpperCase() }); i += m[0].length; continue; }
+    if ('+-*/(),'.includes(ch)) { t.push({ k: 'op', v: ch }); i++; continue; }
+    throw new Error('不允許的字元「' + ch + '」');
+  }
+  return t;
+}
+function parseFormula(src) {
+  const toks = tokenize(src); let p = 0;
+  const peek = () => toks[p], eat = () => toks[p++];
+  const isOp = v => peek() && peek().k === 'op' && peek().v === v;
+  function expr() { let l = term(); while (isOp('+') || isOp('-')) { const o = eat().v; l = { t: 'bin', o, l, r: term() }; } return l; }
+  function term() { let l = unary(); while (isOp('*') || isOp('/')) { const o = eat().v; l = { t: 'bin', o, l, r: unary() }; } return l; }
+  function unary() { if (isOp('-')) { eat(); return { t: 'neg', a: unary() }; } if (isOp('+')) { eat(); return unary(); } return primary(); }
+  function primary() {
+    const k = eat(); if (!k) throw new Error('公式不完整');
+    if (k.k === 'num') return { t: 'num', v: k.v };
+    if (k.k === 'ref') return { t: 'ref', v: k.v };
+    if (k.k === 'id') {
+      if (!['SUM', 'ROUND', 'ABS'].includes(k.v)) throw new Error('不支援的函數 ' + k.v);
+      if (!isOp('(')) throw new Error(k.v + ' 後需接括號'); eat();
+      const args = []; if (!isOp(')')) { args.push(expr()); while (isOp(',')) { eat(); args.push(expr()); } }
+      if (!isOp(')')) throw new Error('缺少右括號'); eat();
+      if (k.v === 'ABS' && args.length !== 1) throw new Error('ABS 需 1 個參數');
+      if (k.v === 'ROUND' && (args.length < 1 || args.length > 2)) throw new Error('ROUND 需 1～2 個參數');
+      if (k.v === 'SUM' && args.length < 1) throw new Error('SUM 至少 1 個參數');
+      return { t: 'fn', n: k.v, args };
+    }
+    if (k.k === 'op' && k.v === '(') { const e = expr(); if (!isOp(')')) throw new Error('缺少右括號'); eat(); return e; }
+    throw new Error('語法錯誤：非預期的「' + k.v + '」');
+  }
+  if (!toks.length) throw new Error('公式為空');
+  const ast = expr(); if (p < toks.length) throw new Error('語法錯誤：多餘內容');
+  return ast;
+}
+function evalAst(a, resolve) {
+  switch (a.t) {
+    case 'num': return a.v;
+    case 'ref': return resolve(a.v);
+    case 'neg': return -evalAst(a.a, resolve);
+    case 'bin': {
+      const x = evalAst(a.l, resolve), y = evalAst(a.r, resolve);
+      if (a.o === '+') return x + y; if (a.o === '-') return x - y; if (a.o === '*') return x * y;
+      if (y === 0) throw new Error('除以零'); return x / y;
+    }
+    case 'fn': {
+      const v = a.args.map(z => evalAst(z, resolve));
+      if (a.n === 'SUM') return v.reduce((s, z) => s + z, 0);
+      if (a.n === 'ABS') return Math.abs(v[0]);
+      return roundTo(v[0], v[1] == null ? 0 : v[1]);
+    }
+  }
+  throw new Error('未知節點');
+}
+const evalFormula = (src, resolve) => evalAst(parseFormula(src), resolve);
+const refsOf = f => [...normFormula(f).matchAll(/\{([^}]+)\}/g)].map(m => m[1].trim());
+
+/* =====================================================================
+ * 4. 稽核引擎：載入案件脈絡、套用規則 R0～R6
+ * ===================================================================*/
+async function loadCtx(caseId) {
+  if (!caseId) return null;
+  const c = await DB.get('cases', caseId); if (!c) return null;
+  const [nodes, links, datasets, reviews, atts] = await Promise.all([
+    DB.byIndex('nodes', 'byCase', caseId), DB.byIndex('links', 'byCase', caseId), DB.byIndex('datasets', 'byCase', caseId),
+    DB.byIndex('reviews', 'byCase', caseId), DB.byIndex('attachments', 'byCase', caseId)]);
+  const tol = await Meta.get('tol', 0.01);
+  nodes.sort(nodeCmp);
+  return { c, nodes, links, datasets, reviews, atts: atts.map(a => ({ id: a.id, nodeId: a.nodeId, name: a.name, size: a.size })), tol };
+}
+const codeNum = c => parseInt(String(c || '').replace(/\D/g, ''), 10) || 0;
+const nodeCmp = (a, b) => (TYPES[a.type]?.order - TYPES[b.type]?.order) || (codeNum(a.code) - codeNum(b.code)) || String(a.code).localeCompare(String(b.code));
+const nextCode = (type, nodes) => {
+  const used = new Set(nodes.map(n => String(n.code).toUpperCase()));
+  let k = Math.max(0, ...nodes.filter(n => n.type === type).map(n => codeNum(n.code))) + 1;
+  while (used.has((TYPES[type].prefix + k).toUpperCase())) k++;
+  return TYPES[type].prefix + k;
+};
+
+function datasetCalc(ds, src) {
+  if (!ds) throw new Error('找不到資料集');
+  if (!src || !src.col) throw new Error('未設定資料集欄位');
+  const ci = ds.columns.indexOf(src.col); if (ci < 0) throw new Error('資料集已無欄位「' + src.col + '」');
+  const vals = ds.rows.map(r => toNum(r[ci]));
+  if (src.mode === 'count') return ds.rows.length;
+  if (src.mode === 'cell') { const v = vals[(+src.row || 1) - 1]; if (v == null) throw new Error('該儲存格不是數值'); return v; }
+  const nums = vals.filter(v => v != null);
+  if (!nums.length) throw new Error('欄位無數值');
+  const s = nums.reduce((a, b) => a + b, 0);
+  return src.mode === 'avg' ? s / nums.length : s;
+}
+
+function analyze(ctx) {
+  const { c, nodes, links, datasets, reviews, atts, tol: defTol } = ctx;
+  const byId = new Map(nodes.map(n => [n.id, n]));
+  const codeMap = new Map(nodes.map(n => [String(n.code || '').toUpperCase(), n]));
+  const out = new Map(), inn = new Map();
+  nodes.forEach(n => { out.set(n.id, []); inn.set(n.id, []); });
+  const goodLinks = links.filter(l => byId.has(l.fromId) && byId.has(l.toId));
+  goodLinks.forEach(l => { out.get(l.fromId).push(l.toId); inn.get(l.toId).push(l.fromId); });
+  const adj = { out, inn };
+  const reachCache = new Map();
+  const reachOut = id => { if (reachCache.has(id)) return reachCache.get(id); const r = reachFrom(adj.out, id); reachCache.set(id, r); return r; };
+  const issues = new Map(nodes.map(n => [n.id, []]));
+  const add = (n, rule, msg) => issues.get(n.id).push({ rule, level: RULES[rule].level, msg });
+  const tolOf = n => { const t = toNum(n.tolerance); return t == null ? defTol : t; };
+
+  // 公式計算（含遞迴與循環保護）
+  const memo = new Map();
+  function evalNode(n, stack) {
+    if (memo.has(n.id)) { const m = memo.get(n.id); if (m.err) throw new Error(m.err); return m.v; }
+    if (stack.includes(n.id)) throw new Error('公式循環引用');
+    let v;
+    try {
+      if (n.type === 'calc' && String(n.formula || '').trim()) {
+        v = evalFormula(n.formula, ref => {
+          const t = codeMap.get(String(ref).toUpperCase());
+          if (!t) throw new Error('找不到節點代號 {' + ref + '}');
+          return evalNode(t, stack.concat(n.id));
+        });
+      } else { const x = toNum(n.value); if (x == null) throw new Error('節點 ' + n.code + ' 沒有數值'); v = x; }
+      if (!Number.isFinite(v)) throw new Error('計算結果非有限數值');
+    } catch (e) { memo.set(n.id, { err: e.message }); throw e; }
+    memo.set(n.id, { v }); return v;
+  }
+  const resolvedText = n => String(normFormula(n.formula || '')).replace(/\{([^}]+)\}/g, (m, r) => { const t = codeMap.get(r.trim().toUpperCase()); if (!t) return '{' + r + '?}'; try { return fmtV(evalNode(t, [])); } catch { return '{' + r + '=?}'; } });
+
+  const verify = [];
+  const vrow = (n, kind, declared, recomputed, ok, msg, extra = {}) => verify.push({ nodeId: n.id, code: n.code, title: n.title, kind, declared, recomputed, diff: (declared != null && recomputed != null) ? declared - recomputed : null, tol: tolOf(n), ok, msg, ...extra });
+
+  // R6 循環
+  const inCycle = new Set();
+  nodes.forEach(n => { if (reachOut(n.id).has(n.id)) inCycle.add(n.id); });
+  nodes.forEach(n => { if (inCycle.has(n.id)) add(n, 'R6', '連結形成循環引用'); });
+
+  nodes.forEach(n => {
+    // R1 無來源數字
+    if (n.type === 'number' && out.get(n.id).length === 0) add(n, 'R1', '數字沒有任何上游來源（未連到計算、資料或佐證）');
+    // R2 計算重算
+    if (n.type === 'calc') {
+      const f = String(n.formula || '').trim();
+      if (!f) add(n, 'R2', '計算節點尚未填寫公式');
+      else {
+        try {
+          const rv = evalNode(n, []); const dv = toNum(n.value);
+          if (dv != null) {
+            const ok = Math.abs(rv - dv) <= tolOf(n) + 1e-12;
+            vrow(n, '計算', dv, rv, ok, ok ? '' : '宣稱值與重算值差異超過容許誤差', { formula: f, resolved: resolvedText(n) });
+            if (!ok) add(n, 'R2', `重算值 ${fmtV(rv)} 與宣稱值 ${fmtV(dv)} 不符（差 ${fmtV(dv - rv)}，容許 ${fmtV(tolOf(n))}）`);
+          } else vrow(n, '計算', null, rv, true, '未填宣稱值，僅顯示重算值', { formula: f, resolved: resolvedText(n) });
+        } catch (e) { add(n, 'R2', '公式無法計算：' + e.message); vrow(n, '計算', toNum(n.value), null, false, e.message, { formula: f, resolved: resolvedText(n) }); }
+      }
+    }
+    // 數字對其推導計算
+    if (n.type === 'number' && toNum(n.value) != null) {
+      out.get(n.id).map(id => byId.get(id)).filter(t => t.type === 'calc' && String(t.formula || '').trim()).forEach(k => {
+        try {
+          const rv = evalNode(k, []); const dv = toNum(n.value); const ok = Math.abs(rv - dv) <= Math.max(tolOf(n), tolOf(k)) + 1e-12;
+          vrow(n, '數字↔計算', dv, rv, ok, ok ? '' : `與計算 ${k.code} 重算值不一致`, { formula: k.code + '：' + k.formula, resolved: resolvedText(k), peer: k.id });
+          if (!ok) { add(n, 'R2', `數字 ${fmtV(dv)} 與計算 ${k.code} 重算值 ${fmtV(rv)} 不符`); add(k, 'R2', `重算值 ${fmtV(rv)} 與下游數字 ${n.code} 宣稱值 ${fmtV(dv)} 不符`); }
+        } catch { /* 公式錯誤已於計算節點回報 */ }
+      });
+    }
+    // 資料節點對資料集
+    if (n.type === 'data' && n.datasetId && n.src && n.src.col) {
+      const ds = datasets.find(d => d.id === n.datasetId);
+      try {
+        const rv = datasetCalc(ds, n.src); const dv = toNum(n.value);
+        if (dv != null) {
+          const ok = Math.abs(rv - dv) <= tolOf(n) + 1e-12;
+          vrow(n, '資料集', dv, rv, ok, ok ? '' : '節點數值與資料集重算不符', { formula: `${ds.name}｜${n.src.col}｜${{ sum: '合計', avg: '平均', count: '筆數', cell: '第' + n.src.row + '列' }[n.src.mode] || n.src.mode}`, resolved: '' });
+          if (!ok) add(n, 'R2', `資料集重算值 ${fmtV(rv)} 與節點數值 ${fmtV(dv)} 不符`);
+        }
+      } catch (e) { add(n, 'R2', '資料集來源無法重算：' + e.message); vrow(n, '資料集', toNum(n.value), null, false, e.message, { formula: n.rowRef || '', resolved: '' }); }
+    }
+    // R3 空佐證
+    if (n.type === 'evidence' && !atts.some(a => a.nodeId === n.id) && !String(n.refPath || '').trim()) add(n, 'R3', '佐證沒有附件，也沒有參考路徑');
+    // RV 覆核
+    if (n.reviewStatus === 'reject') add(n, 'RV', '覆核退回');
+    if (n.reviewStatus === 'fix') add(n, 'RV', '覆核要求補件');
+  });
+
+  // R0 結論完整度、R4 孤立
+  const claims = nodes.filter(n => n.type === 'claim');
+  const reachable = new Set(claims.map(n => n.id));
+  let complete = 0;
+  claims.forEach(cl => {
+    const r = reachOut(cl.id); r.forEach(x => reachable.add(x));
+    const ok = [...r].some(id => ['data', 'evidence'].includes(byId.get(id).type));
+    cl._complete = ok; if (ok) complete++; else add(cl, 'R0', '此結論沒有任何路徑連到「資料」或「佐證」節點');
+  });
+  nodes.forEach(n => { if (n.type !== 'claim' && !reachable.has(n.id)) add(n, 'R4', '節點未被任何結論引用（孤立）'); });
+
+  // R5 覆核後被修改
+  nodes.forEach(n => {
+    if (n.reviewStatus === 'pass' && n.reviewedAt) {
+      const ids = [n.id, ...reachOut(n.id)];
+      const changed = ids.map(id => byId.get(id)).filter(x => x && x.updatedAt && x.updatedAt > n.reviewedAt);
+      if (changed.length) add(n, 'R5', changed.some(x => x.id === n.id) ? '節點於覆核通過後被修改' : '上游節點 ' + changed.map(x => x.code).join('、') + ' 於覆核通過後被修改');
+    }
+  });
+
+  const gaps = [];
+  nodes.forEach(n => issues.get(n.id).forEach(i => gaps.push({ caseId: c.id, caseName: c.name, nodeId: n.id, code: n.code, title: n.title, type: n.type, rule: i.rule, ruleLabel: RULES[i.rule].label, level: i.level, msg: i.msg })));
+  const cnt = {}; Object.keys(RULES).forEach(r => cnt[r] = 0); gaps.forEach(g => cnt[g.rule]++);
+  const pending = nodes.filter(n => (n.reviewStatus || 'unreviewed') === 'unreviewed' || issues.get(n.id).some(i => i.rule === 'R5')).length;
+  return { issues, gaps, cnt, adj, byId, codeMap, verify, claimsTotal: claims.length, claimsComplete: complete,
+    pct: claims.length ? complete / claims.length * 100 : null, pending, evalNode, resolvedText, reachOut };
+}
+function reachFrom(adjMap, id) {
+  const seen = new Set(), st = [...(adjMap.get(id) || [])];
+  while (st.length) { const x = st.pop(); if (seen.has(x)) continue; seen.add(x); (adjMap.get(x) || []).forEach(y => st.push(y)); }
+  return seen;
+}
+async function loadAll() {
+  const cases = (await DB.all('cases')).sort((a, b) => String(b.updatedAt).localeCompare(String(a.updatedAt)));
+  const list = [];
+  for (const c of cases) { const ctx = await loadCtx(c.id); list.push({ ctx, an: analyze(ctx) }); }
+  return list;
+}
+const pctTxt = p => p == null ? '—' : fmtN(p, 0) + '%';
+
+/* =====================================================================
+ * 5. 佐證鏈地圖（SVG 分層圖）
+ * ===================================================================*/
+function buildMap(ctx, an, { fit = false } = {}) {
+  const { nodes, links } = ctx; const N = nodes.length;
+  if (!N) return '<div class="empty">此案件尚無節點</div>';
+  const NW = 196, NH = 62, GX = 74, GY = 16, PAD = 18, HEAD = 34, STUB = 44;
+  // 起點：結論，以及未被任何節點引用的孤立節點（讓它們的連線也由左往右，不會繞回）
+  const depth = new Map(); nodes.filter(x => x.type === 'claim' || !(an.adj.inn.get(x.id) || []).length).forEach(x => depth.set(x.id, 0));
+  for (let it = 0; it <= N; it++) {
+    let ch = false;
+    for (const l of links) {
+      if (!an.byId.has(l.fromId) || !an.byId.has(l.toId) || !depth.has(l.fromId)) continue;
+      const d = depth.get(l.fromId) + 1;
+      if (d <= N && (depth.get(l.toId) ?? -1) < d) { depth.set(l.toId, d); ch = true; }
+    }
+    if (!ch) break;
+  }
+  const maxD = depth.size ? Math.max(...depth.values()) : -1;
+  const cols = []; let hasOrphan = false;
+  nodes.forEach(x => { const d = depth.has(x.id) ? depth.get(x.id) : (hasOrphan = true, maxD + 1); (cols[d] = cols[d] || []).push(x); });
+  for (let i = 0; i < cols.length; i++) cols[i] = cols[i] || [];
+  cols.forEach(c => c.sort(nodeCmp));
+  for (let pass = 0; pass < 2; pass++) {
+    for (let k = 1; k < cols.length; k++) {
+      const idx = new Map(); cols.forEach(c => c.forEach((x, i) => idx.set(x.id, i)));
+      const bary = x => { const ps = links.filter(l => l.toId === x.id && idx.has(l.fromId)).map(l => idx.get(l.fromId)); return ps.length ? ps.reduce((a, b) => a + b, 0) / ps.length : idx.get(x.id); };
+      cols[k].sort((a, b) => bary(a) - bary(b) || nodeCmp(a, b));
+    }
+  }
+  const pos = new Map();
+  cols.forEach((c, k) => c.forEach((x, i) => pos.set(x.id, { x: PAD + k * (NW + GX), y: HEAD + i * (NH + GY) })));
+  const rows = Math.max(...cols.map(c => c.length), 1);
+  const W = PAD * 2 + cols.length * NW + (cols.length - 1) * GX + STUB, H = HEAD + rows * (NH + GY) + PAD;
+  const colLabel = (c, k) => (hasOrphan && k === cols.length - 1 && !c.some(x => depth.has(x.id))) ? '孤立（未被結論引用）' :
+    '第 ' + (k + 1) + ' 層・' + [...new Set(c.map(x => TYPES[x.type].label))].join('／');
+  let svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" ${fit ? 'width="100%"' : `width="${W}" height="${H}"`} font-family="Microsoft JhengHei,PingFang TC,sans-serif">`;
+  cols.forEach((c, k) => { svg += `<text x="${PAD + k * (NW + GX)}" y="20" font-size="12" fill="#777" font-weight="bold">${esc(colLabel(c, k))}</text>`; });
+  links.forEach(l => {
+    const a = pos.get(l.fromId), b = pos.get(l.toId); if (!a || !b) return;
+    const x1 = a.x + NW, y1 = a.y + NH / 2, x2 = b.x, y2 = b.y + NH / 2, dx = Math.max(36, Math.abs(x2 - x1) / 2);
+    svg += `<path class="edge" data-f="${esc(l.fromId)}" data-t="${esc(l.toId)}" d="M${x1},${y1} C${x1 + dx},${y1} ${x2 - dx},${y2} ${x2},${y2}"><title>${esc(REL[l.relation] || '')}</title></path>`;
+  });
+  nodes.forEach(x => {
+    if (x.type !== 'data' && x.type !== 'evidence' && (an.adj.out.get(x.id) || []).length === 0) {
+      const p = pos.get(x.id), y = p.y + NH / 2;
+      svg += `<g class="stub" data-f="${esc(x.id)}"><line x1="${p.x + NW}" y1="${y}" x2="${p.x + NW + 34}" y2="${y}" stroke="#c62828" stroke-width="2" stroke-dasharray="5 4"/><text x="${p.x + NW + 36}" y="${y + 5}" font-size="16" fill="#c62828" font-weight="bold">✕</text></g>`;
+    }
+  });
+  nodes.forEach(x => {
+    const p = pos.get(x.id), T = TYPES[x.type], iss = an.issues.get(x.id) || [];
+    const errN = iss.filter(i => i.level === 'err').length, warnN = iss.filter(i => i.level === 'warn').length;
+    const val = (x.type !== 'claim' && x.type !== 'evidence' && toNum(x.value) != null) ? fmtV(toNum(x.value)) + (x.unit ? ' ' + x.unit : '') : (x.type === 'evidence' ? (x.refPath ? '🔗 ' + trunc(x.refPath, 14) : (ctx.atts.some(a => a.nodeId === x.id) ? '📎 附件' : '（空）')) : '');
+    svg += `<g class="mnode" data-id="${esc(x.id)}" transform="translate(${p.x},${p.y})"><title>${esc(x.code + ' ' + x.title + (iss.length ? '\n' + iss.map(i => '• ' + i.msg).join('\n') : ''))}</title>
+      <rect class="bx" width="${NW}" height="${NH}" rx="8" fill="${T.bg}" stroke="${errN ? '#c62828' : T.color}" stroke-width="${errN ? 3 : 1.5}"${iss.some(i => i.rule === 'R4') ? ' stroke-dasharray="6 4"' : ''}/>
+      <rect width="6" height="${NH}" rx="3" fill="${T.color}"/>
+      <text x="14" y="19" font-size="12" font-weight="bold" fill="${T.color}">${T.icon} ${esc(x.code)}</text>
+      <text x="14" y="38" font-size="13" fill="#222">${esc(trunc(x.title, 13))}</text>
+      <text x="14" y="55" font-size="11" fill="#666">${esc(val)}</text>
+      ${x.reviewStatus === 'pass' ? `<text x="${NW - 10}" y="55" font-size="12" fill="#2e7d32" text-anchor="end">✔</text>` : ''}
+      ${errN ? `<circle cx="${NW - 12}" cy="12" r="9" fill="#c62828"/><text x="${NW - 12}" y="16" font-size="11" fill="#fff" text-anchor="middle">${errN}</text>` : (warnN ? `<circle cx="${NW - 12}" cy="12" r="9" fill="#e59a1c"/><text x="${NW - 12}" y="16" font-size="11" fill="#fff" text-anchor="middle">${warnN}</text>` : '')}
+    </g>`;
+  });
+  return svg + '</svg>';
+}
+function mapHighlight(root, an, id) {
+  const ns = $$('.mnode', root), es = $$('.edge', root), ss = $$('.stub', root);
+  if (!id) { [...ns, ...es, ...ss].forEach(e => e.classList.remove('dim', 'hl', 'hl2')); return; }
+  const up = an.reachOut(id), down = reachFrom(an.adj.inn, id), keep = new Set([id, ...up, ...down]);
+  ns.forEach(e => e.classList.toggle('dim', !keep.has(e.dataset.id)));
+  es.forEach(e => {
+    const f = e.dataset.f, t = e.dataset.t;
+    const inUp = (f === id || up.has(f)) && up.has(t), inDown = (t === id || down.has(t)) && down.has(f);
+    e.classList.toggle('hl', inUp); e.classList.toggle('hl2', inDown && !inUp); e.classList.toggle('dim', !(inUp || inDown));
+  });
+  ss.forEach(e => e.classList.toggle('dim', !keep.has(e.dataset.f)));
+}
+
+/* =====================================================================
+ * 6. 共用資料操作
+ * ===================================================================*/
+const State = {
+  page: 'dash', case: null, sel: null, mapSel: null, nf: { type: 'all', q: '' }, tok: 0,
+  sorts: { cases: { key: 'updatedAt', dir: -1 }, gaps: { key: 'level', dir: 1 }, review: { key: 'code', dir: 1 }, verify: { key: 'code', dir: 1 } },
+  q: { cases: '', gaps: '', review: '' }, gapRule: 'all', rvStatus: 'all'
+};
+async function setCase(id) { State.case = id; State.sel = null; State.mapSel = null; await Meta.set('currentCase', id); }
+async function openNode(caseId, nodeId) { await setCase(caseId); State.sel = nodeId; if (location.hash.slice(1) === 'nodes') refresh(); else location.hash = 'nodes'; }
+async function deleteCaseData(id) {
+  const ids = {};
+  for (const s of ['nodes', 'links', 'datasets', 'reviews', 'attachments']) ids[s] = (await DB.byIndex(s, 'byCase', id)).map(x => x.id);
+  await DB.tx(DATA_STORES, t => { for (const s in ids) ids[s].forEach(k => t.objectStore(s).delete(k)); t.objectStore('cases').delete(id); });
+}
+async function deleteNodeData(ctx, id) {
+  const lk = ctx.links.filter(l => l.fromId === id || l.toId === id).map(l => l.id);
+  const rv = (await DB.byIndex('reviews', 'byNode', id)).map(x => x.id);
+  const at = (await DB.byIndex('attachments', 'byNode', id)).map(x => x.id);
+  await DB.tx(['nodes', 'links', 'reviews', 'attachments'], t => {
+    t.objectStore('nodes').delete(id); lk.forEach(k => t.objectStore('links').delete(k));
+    rv.forEach(k => t.objectStore('reviews').delete(k)); at.forEach(k => t.objectStore('attachments').delete(k));
+  });
+}
+async function copyCaseData(id) {
+  const c = await DB.get('cases', id);
+  const [nodes, links, datasets, atts] = await Promise.all(['nodes', 'links', 'datasets', 'attachments'].map(s => DB.byIndex(s, 'byCase', id)));
+  const nid = uid(), idm = new Map(), dm = new Map();
+  datasets.forEach(d => dm.set(d.id, uid())); nodes.forEach(n => idm.set(n.id, uid()));
+  const t0 = now();
+  await DB.tx(DATA_STORES, t => {
+    t.objectStore('cases').put({ ...c, id: nid, name: c.name + '（副本）', status: '規劃中', createdAt: t0, updatedAt: t0 });
+    nodes.forEach(n => t.objectStore('nodes').put({ ...n, id: idm.get(n.id), caseId: nid, datasetId: n.datasetId ? dm.get(n.datasetId) || '' : '', reviewStatus: 'unreviewed', reviewedAt: null, updatedAt: t0 }));
+    links.forEach(l => t.objectStore('links').put({ ...l, id: uid(), caseId: nid, fromId: idm.get(l.fromId), toId: idm.get(l.toId) }));
+    datasets.forEach(d => t.objectStore('datasets').put({ ...d, id: dm.get(d.id), caseId: nid }));
+    atts.forEach(a => t.objectStore('attachments').put({ ...a, id: uid(), caseId: nid, nodeId: idm.get(a.nodeId) }));
+  });
+  return nid;
+}
+function defRel(from, to) { if (to.type === 'evidence') return 'supported_by'; if (from.type === 'number' || from.type === 'data') return 'derived_from'; return 'references'; }
+async function addLink(ctx, fromId, toId, relation) {
+  if (fromId === toId) { toast('不能連到自己', 'err'); return false; }
+  if (ctx.links.some(l => l.fromId === fromId && l.toId === toId)) { toast('此連結已存在', 'err'); return false; }
+  await DB.put('links', { id: uid(), caseId: ctx.c.id, fromId, toId, relation });
+  const loop = reachFrom((() => { const m = new Map(ctx.nodes.map(n => [n.id, []])); [...ctx.links, { fromId, toId }].forEach(l => m.get(l.fromId)?.push(l.toId)); return m; })(), toId).has(fromId);
+  if (loop) toast('已建立，但此連結形成循環引用（R6）', 'err'); else toast('已新增連結', 'ok');
+  return true;
+}
+async function touchNode(id) { const n = await DB.get('nodes', id); if (n) { n.updatedAt = now(); await DB.put('nodes', n); } }
+async function reviewDialog(ctx, n, status) {
+  const [lab] = RSTAT[status];
+  const errs = status === 'pass' ? analyze(ctx).issues.get(n.id).filter(i => i.level === 'err') : [];
+  const body = document.createElement('div');
+  body.innerHTML = `<p><b>${esc(n.code)}</b> ${esc(n.title)} → <b>${esc(lab)}</b></p>
+    ${errs.length ? `<div class="issue err">🔴 本節點仍有 ${errs.length} 項嚴重問題（${esc(errs.map(i => i.rule).join('、'))}）。若仍要通過，請在意見中說明理由。</div>` : ''}
+    <div class="field"><label>覆核人</label><input name="rv" value="${esc(ctx.c.reviewer || '')}"></div>
+    <div class="field"><label>覆核意見 *（必填）</label><textarea name="cm">${status === 'pass' && !errs.length ? '經核對來源與計算無誤' : ''}</textarea></div>`;
+  const ok = await modal({
+    title: '覆核：' + lab, body, ok: '確認',
+    onOk: async root => {
+      const cm = root.querySelector('[name=cm]').value.trim(); if (!cm) { toast('請填寫覆核意見', 'err'); return false; }
+      const at = now(); const fresh = await DB.get('nodes', n.id);
+      fresh.reviewStatus = status; fresh.reviewedAt = at;
+      await DB.tx(['nodes', 'reviews'], t => { t.objectStore('nodes').put(fresh); t.objectStore('reviews').put({ id: uid(), nodeId: n.id, caseId: ctx.c.id, status, comment: cm, reviewer: root.querySelector('[name=rv]').value.trim(), at }); });
+      toast('已記錄覆核：' + lab, 'ok');
+    }
+  });
+  if (ok) refresh();
+  return ok;
+}
+async function showImpact(ctx, an, n) {
+  const dep = [...reachFrom(an.adj.inn, n.id)].map(id => an.byId.get(id)).sort(nodeCmp);
+  await modal({
+    title: `影響分析：${n.code} ${trunc(n.title, 20)}`, ok: '', cancel: '關閉', wide: true,
+    body: `<p class="muted">下列節點直接或間接引用了「${esc(n.code)}」。若修改本節點，已「通過」覆核的節點會被標示為「需重新覆核」。</p>` +
+      (dep.length ? `<table class="grid"><thead><tr><th>代號</th><th>類型</th><th>標題</th><th>覆核狀態</th></tr></thead><tbody>${dep.map(x => `<tr><td class="mono">${esc(x.code)}</td><td>${typeTag(x.type)}</td><td>${esc(x.title)}</td><td>${rstatTag(x.reviewStatus)}</td></tr>`).join('')}</tbody></table>` : '<div class="empty">沒有任何節點引用本節點</div>')
+  });
+}
+
+/* =====================================================================
+ * 7. 路由與導覽
+ * ===================================================================*/
+const PAGES = [
+  { grp: '工作台' },
+  { id: 'dash', title: '總覽', render: renderDash },
+  { id: 'cases', title: '查核案件', render: renderCases },
+  { id: 'nodes', title: '節點工作台', render: renderNodes },
+  { id: 'map', title: '⭐ 佐證鏈地圖', render: renderMap },
+  { grp: '核驗與覆核' },
+  { id: 'verify', title: '數字核驗', render: renderVerify },
+  { id: 'import', title: '資料匯入', render: renderImport },
+  { id: 'review', title: '覆核', render: renderReview },
+  { id: 'gaps', title: '缺證清單', render: renderGaps },
+  { id: 'report', title: '查核報告', render: renderReport },
+  { grp: '系統' },
+  { id: 'data', title: '資料管理', render: renderData },
+  { id: 'help', title: '使用說明', render: renderHelp }
+];
+function renderNav() {
+  $('#nav').innerHTML = PAGES.map(p => p.grp ? `<div class="grp">${esc(p.grp)}</div>`
+    : `<a href="#${p.id}" class="${p.id === State.page ? 'on' : ''}">${esc(p.title)}</a>`).join('');
+}
+async function refreshCaseSel() {
+  const cases = (await DB.all('cases')).sort((a, b) => String(b.updatedAt).localeCompare(String(a.updatedAt)));
+  if (!cases.some(c => c.id === State.case)) { State.case = cases[0]?.id || null; State.sel = null; if (State.case) await Meta.set('currentCase', State.case); }
+  const s = $('#case-sel');
+  s.innerHTML = cases.length ? cases.map(c => `<option value="${esc(c.id)}">${esc(trunc(c.name, 26))}</option>`).join('') : '<option value="">（尚無案件）</option>';
+  s.value = State.case || '';
+}
+/* 先渲染到離線容器，確認仍是最新一次導覽才換上畫面，避免快速切頁時舊頁面蓋掉新頁面 */
+async function go(id) {
+  const p = PAGES.find(x => x.id === id) || PAGES.find(x => x.id);
+  const tok = ++State.tok;
+  State.page = p.id; renderNav(); Meta.set('lastPage', p.id);
+  const view = document.createElement('main'); view.id = 'app';
+  try { await refreshCaseSel(); await p.render(view); }
+  catch (e) { console.error(e); view.innerHTML = `<div class="card"><h2>發生錯誤</h2><pre>${esc(e.stack || e)}</pre></div>`; }
+  if (tok !== State.tok) return;
+  $('#app').replaceWith(view); // 直接換上渲染好的容器：事件處理器內持有的 app 參照仍指向畫面上的元素
+}
+window.addEventListener('hashchange', () => go(location.hash.slice(1)));
+const refresh = () => go(State.page);
+/* 搜尋框：中文輸入法組字期間不重繪，組字完成才套用（否則會打斷注音／倉頡輸入） */
+function bindQ(app, sel, obj, key) {
+  const qi = $(sel, app); if (!qi) return;
+  const fire = () => { obj[key] = qi.value; clearTimeout(qi._t); qi._t = setTimeout(async () => { await refresh(); const n = $(sel); if (n) { n.focus(); n.setSelectionRange(n.value.length, n.value.length); } }, 250); };
+  qi.addEventListener('compositionstart', () => { qi._comp = true; clearTimeout(qi._t); });
+  qi.addEventListener('compositionend', () => { qi._comp = false; fire(); });
+  qi.addEventListener('input', e => { if (qi._comp || e.isComposing) return; fire(); });
+}
+async function needCase(app) {
+  const ctx = await loadCtx(State.case);
+  if (!ctx) {
+    app.innerHTML = `<div class="card empty">尚未選擇案件。<br><br><button class="btn pri" onclick="location.hash='cases'">前往建立案件</button> <button class="btn gold" id="n-sample">載入範例資料</button></div>`;
+    $('#n-sample', app).onclick = loadSample; return null;
+  }
+  return ctx;
+}
+
+/* ---------- 總覽 ---------- */
+async function renderDash(app) {
+  const all = await loadAll();
+  if (!all.length) {
+    app.innerHTML = `<div class="card empty"><h2 style="justify-content:center">歡迎使用佐證鏈稽核工作室</h2>把「結論 → 數字 → 計算 → 原始資料 → 佐證附件」串成可追溯的鏈。<br>目前尚無案件。<br><br>
+      <button class="btn pri" id="d-new">＋ 建立第一個案件</button> <button class="btn gold" id="d-sample">載入範例資料</button></div>`;
+    $('#d-sample', app).onclick = loadSample; $('#d-new', app).onclick = () => editCase();
+    return;
+  }
+  const nNodes = all.reduce((s, x) => s + x.ctx.nodes.length, 0);
+  const ct = all.reduce((s, x) => s + x.an.claimsTotal, 0), cc = all.reduce((s, x) => s + x.an.claimsComplete, 0);
+  const r1 = all.reduce((s, x) => s + x.an.cnt.R1, 0), pend = all.reduce((s, x) => s + x.an.pending, 0);
+  const gapsAll = all.flatMap(x => x.an.gaps);
+  const reminders = [];
+  const td = todayISO();
+  all.forEach(({ ctx, an }) => {
+    if (ctx.c.dueDate && ctx.c.dueDate < td && ctx.c.status !== '已結案' && an.pending > 0)
+      reminders.push({ lv: 'err', txt: `案件「${ctx.c.name}」已逾期（截止 ${fmtROC(ctx.c.dueDate)}），仍有 ${an.pending} 個節點待覆核`, open: [ctx.c.id, ''] });
+    else if (ctx.c.dueDate && ctx.c.dueDate >= td && ctx.c.dueDate <= addDays(3) && ctx.c.status !== '已結案' && an.pending > 0)
+      reminders.push({ lv: 'warn', txt: `案件「${ctx.c.name}」將於 ${fmtROC(ctx.c.dueDate)} 到期，尚有 ${an.pending} 個節點待覆核`, open: [ctx.c.id, ''] });
+  });
+  gapsAll.filter(g => g.level === 'err').sort((a, b) => a.rule.localeCompare(b.rule)).slice(0, 10).forEach(g =>
+    reminders.push({ lv: 'err', txt: `【${g.ruleLabel}】${g.caseName}｜${g.code} ${trunc(g.title, 24)}：${g.msg}`, open: [g.caseId, g.nodeId] }));
+  app.innerHTML = `
+    <div class="stats">
+      <div class="stat"><div class="v">${fmtN(all.length)}</div><div class="l">案件數</div></div>
+      <div class="stat"><div class="v">${fmtN(nNodes)}</div><div class="l">節點數</div></div>
+      <div class="stat"><div class="v">${pctTxt(ct ? cc / ct * 100 : null)}</div><div class="l">鏈完整度（${cc}／${ct} 個結論）</div></div>
+      <div class="stat ${r1 ? 'bad' : ''}"><div class="v">${fmtN(r1)}</div><div class="l">無來源數字</div></div>
+      <div class="stat ${pend ? 'bad' : ''}"><div class="v">${fmtN(pend)}</div><div class="l">待覆核節點</div></div>
+    </div>
+    <div class="card"><h2>⚠ 提醒事項 ${tagHtml(reminders.length + ' 項', reminders.length ? 'err' : 'ok')}</h2>
+      ${reminders.length ? reminders.map((r, i) => `<div class="issue ${r.lv}" style="cursor:pointer" data-r="${i}">${r.lv === 'err' ? '🔴' : '🟡'} <span>${esc(r.txt)}</span></div>`).join('') : '<div class="issue ok">✔ 目前沒有需要處理的事項</div>'}
+    </div>
+    <div class="card"><h2>各案件鏈完整度</h2>${barChart(all.map(x => ({ label: x.ctx.c.name, value: x.an.pct ?? 0, color: x.an.pct === 100 ? '#2e7d32' : (x.an.pct == null ? '#bbb' : '#8a1538') })), { fmt: v => fmtN(v, 0) + '%', max: 100 })}</div>`;
+  $$('[data-r]', app).forEach(el => el.onclick = () => { const r = reminders[+el.dataset.r]; if (r.open[1]) openNode(r.open[0], r.open[1]); else { setCase(r.open[0]).then(() => location.hash = 'review'); } });
+}
+
+/* ---------- 查核案件 ---------- */
+const CASE_COLS = [
+  { key: 'name', label: '案件名稱' }, { key: 'baseDate', label: '基準日', get: r => fmtROC(r.baseDate) },
+  { key: 'owner', label: '承辦' }, { key: 'reviewer', label: '覆核者' }, { key: 'status', label: '狀態' },
+  { key: 'dueDate', label: '截止日', get: r => fmtROC(r.dueDate) },
+  { key: 'nodes', label: '節點數', num: true }, { key: 'pct', label: '完整度', num: true, get: r => r.pct == null ? '' : Math.round(r.pct) + '%' },
+  { key: 'gaps', label: '缺證數', num: true }
+];
+async function renderCases(app) {
+  const all = await loadAll();
+  let rows = all.map(({ ctx, an }) => ({ ...ctx.c, nodes: ctx.nodes.length, pct: an.pct, gaps: an.gaps.length }));
+  const q = State.q.cases.trim().toLowerCase();
+  if (q) rows = rows.filter(r => CASE_COLS.some(c => String(typeof c.get === 'function' ? c.get(r) : r[c.key] ?? '').toLowerCase().includes(q)));
+  const st = State.sorts.cases;
+  rows = sortRows(rows, st, CASE_COLS.map(c => c.key === 'pct' ? { ...c, get: r => r.pct ?? -1 } : c.key === 'baseDate' || c.key === 'dueDate' ? { ...c, get: r => r[c.key] || '' } : c));
+  app.innerHTML = `<div class="card"><h2>查核案件 ${tagHtml(rows.length + ' 件')}<span class="sp"></span>
+      <input class="inp" id="c-q" placeholder="搜尋…" value="${esc(State.q.cases)}">
+      <button class="btn" id="c-csv">CSV</button><button class="btn" id="c-xls">Excel（全部）</button>
+      <button class="btn pri" id="c-add">＋ 新增案件</button></h2>
+    ${rows.length ? `<table class="grid"><thead><tr>${thHtml(CASE_COLS, st)}<th>操作</th></tr></thead><tbody>
+      ${rows.map(r => `<tr class="${r.id === State.case ? 'sel' : ''}">${CASE_COLS.map(c => `<td class="${c.num ? 'num' : ''}">${c.key === 'status' ? tagHtml(r.status, r.status === '已結案' ? 'ok' : 'gold') : c.key === 'name' ? `<b>${esc(r.name)}</b>` : esc(c.get ? c.get(r) : r[c.key])}</td>`).join('')}
+      <td style="white-space:nowrap"><button class="btn sm pri" data-go="${esc(r.id)}">進入</button> <button class="btn sm" data-e="${esc(r.id)}">✎</button> <button class="btn sm" data-cp="${esc(r.id)}" title="複製">⧉</button> <button class="btn sm danger" data-d="${esc(r.id)}">🗑</button></td></tr>`).join('')}
+    </tbody></table>` : '<div class="empty">沒有符合的案件</div>'}</div>`;
+  bindQ(app, '#c-q', State.q, 'cases'); bindSort(app, st, refresh);
+  $('#c-add', app).onclick = () => editCase();
+  $('#c-csv', app).onclick = () => download(`${APP.filePrefix}_案件清單_${today()}.csv`, toCSV(rows, CASE_COLS), 'text/csv;charset=utf-8');
+  $('#c-xls', app).onclick = exportExcelAll;
+  $$('[data-go]', app).forEach(b => b.onclick = async () => { await setCase(b.dataset.go); location.hash = 'nodes'; });
+  $$('[data-e]', app).forEach(b => b.onclick = async () => editCase(await DB.get('cases', b.dataset.e)));
+  $$('[data-cp]', app).forEach(b => b.onclick = async () => { const id = await copyCaseData(b.dataset.cp); await setCase(id); toast('已複製案件（覆核狀態已重置）', 'ok'); refresh(); });
+  $$('[data-d]', app).forEach(b => b.onclick = async () => {
+    if (!await confirmBox('確定刪除此案件？其節點、連結、資料集、覆核紀錄與附件將一併刪除，無法復原。', '刪除')) return;
+    await deleteCaseData(b.dataset.d); toast('已刪除案件', 'ok'); refresh();
+  });
+}
+async function editCase(c) {
+  const isNew = !c; c = c || { id: uid(), status: '規劃中', baseDate: '', createdAt: now() };
+  const body = document.createElement('div');
+  body.innerHTML = `<div class="form2">
+    <div class="field full"><label>案件名稱 *</label><input name="name" value="${esc(c.name)}"></div>
+    <div class="field"><label>基準日</label><input type="date" name="baseDate" value="${esc(c.baseDate)}"></div>
+    <div class="field"><label>狀態</label><select name="status">${CASE_STATUS.map(s => `<option ${s === c.status ? 'selected' : ''}>${s}</option>`).join('')}</select></div>
+    <div class="field"><label>承辦</label><input name="owner" value="${esc(c.owner)}"></div>
+    <div class="field"><label>覆核者</label><input name="reviewer" value="${esc(c.reviewer)}"></div>
+    <div class="field"><label>截止日</label><input type="date" name="dueDate" value="${esc(c.dueDate)}"></div>
+    <div class="field full"><label>備註</label><textarea name="note">${esc(c.note)}</textarea></div></div>`;
+  await modal({
+    title: isNew ? '新增案件' : '編輯案件', body, ok: '儲存',
+    onOk: async root => {
+      const v = n => root.querySelector(`[name=${n}]`).value.trim();
+      if (!v('name')) { toast('請輸入案件名稱', 'err'); return false; }
+      Object.assign(c, { name: v('name'), baseDate: v('baseDate'), status: v('status'), owner: v('owner'), reviewer: v('reviewer'), dueDate: v('dueDate'), note: v('note'), updatedAt: now() });
+      await DB.put('cases', c); if (isNew) await setCase(c.id);
+      toast('已儲存', 'ok'); refresh();
+    }
+  });
+}
+
+/* ---------- 節點工作台 ---------- */
+const NODE_COLS = [
+  { key: 'code', label: '代號' }, { key: 'type', label: '類型', get: r => TYPES[r.type].label }, { key: 'title', label: '標題' },
+  { key: 'content', label: '內容' }, { key: 'value', label: '數值' }, { key: 'unit', label: '單位' }, { key: 'formula', label: '公式' },
+  { key: 'reviewStatus', label: '覆核狀態', get: r => RSTAT[r.reviewStatus || 'unreviewed'][0] }
+];
+async function renderNodes(app) {
+  const ctx = await needCase(app); if (!ctx) return;
+  const an = analyze(ctx), nf = State.nf;
+  const q = nf.q.trim().toLowerCase();
+  const list = ctx.nodes.filter(n => (nf.type === 'all' || n.type === nf.type) && (!q || (n.code + n.title + (n.content || '')).toLowerCase().includes(q)));
+  if (!State.sel || !an.byId.has(State.sel)) State.sel = list[0]?.id || ctx.nodes[0]?.id || null;
+  const sel = State.sel ? an.byId.get(State.sel) : null;
+  const cnt = t => ctx.nodes.filter(n => n.type === t).length;
+  app.innerHTML = `<div class="wb">
+    <div class="card"><h2>節點 ${tagHtml(ctx.nodes.length)}<span class="sp"></span><button class="btn sm pri" id="n-add">＋ 新增</button></h2>
+      <input class="inp" id="n-q" style="width:100%;margin-bottom:8px" placeholder="搜尋代號、標題、內容…" value="${esc(nf.q)}">
+      <div class="chips"><span class="chip ${nf.type === 'all' ? 'on' : ''}" data-t="all">全部 ${ctx.nodes.length}</span>${Object.entries(TYPES).map(([k, t]) => `<span class="chip ${nf.type === k ? 'on' : ''}" data-t="${k}">${t.icon}${t.label} ${cnt(k)}</span>`).join('')}</div>
+      <div class="nlist">${list.map(n => { const is = an.issues.get(n.id); const e = is.some(i => i.level === 'err'), w = is.length > 0;
+        return `<div class="nitem ${n.id === State.sel ? 'on' : ''}" data-id="${esc(n.id)}"><span class="cd">${esc(n.code)}</span><span>${TYPES[n.type].icon}</span><span class="tt" title="${esc(n.title)}">${esc(n.title)}</span>${e ? '🔴' : w ? '🟡' : ''}${n.reviewStatus === 'pass' ? '<span style="color:var(--ok)">✔</span>' : ''}</div>`; }).join('') || '<div class="empty">沒有符合的節點</div>'}</div>
+      <div class="row" style="margin-top:10px"><button class="btn sm" id="n-csv">CSV</button><button class="btn sm" id="n-xls">Excel</button></div></div>
+    <div class="card" id="nd">${sel ? nodeDetail(sel, ctx, an) : '<div class="empty">請先新增節點。<br><br>建議從「🎯 結論」開始，再往下串連數字、計算、資料與佐證。</div>'}</div>
+    <div class="card" id="nl">${sel ? linkPanel(sel, ctx, an) : ''}</div></div>`;
+  bindQ(app, '#n-q', nf, 'q');
+  $$('.chip', app).forEach(ch => ch.onclick = () => { nf.type = ch.dataset.t; refresh(); });
+  $$('.nitem', app).forEach(it => it.onclick = () => { State.sel = it.dataset.id; refresh(); });
+  $('#n-add', app).onclick = () => addNodeDialog(ctx);
+  $('#n-csv', app).onclick = () => download(`${APP.filePrefix}_節點清單_${safeName(ctx.c.name)}_${today()}.csv`, toCSV(ctx.nodes, NODE_COLS), 'text/csv;charset=utf-8');
+  $('#n-xls', app).onclick = () => download(`${APP.filePrefix}_節點清單_${today()}.xls`, toExcelXML([{ name: '節點', cols: NODE_COLS, rows: ctx.nodes }]), 'application/vnd.ms-excel');
+  if (sel) bindNodeDetail(app, ctx, an, sel);
+}
+async function addNodeDialog(ctx, preType) {
+  const body = document.createElement('div');
+  body.innerHTML = `<div class="field"><label>類型</label><select name="type">${Object.entries(TYPES).map(([k, t]) => `<option value="${k}" ${k === (preType || 'claim') ? 'selected' : ''}>${t.icon} ${t.label}</option>`).join('')}</select></div>
+    <div class="field"><label>標題 *</label><input name="title" placeholder="例如：風險性資產增加 8.18 億元"></div>`;
+  await modal({
+    title: '新增節點', body, ok: '建立',
+    onOk: async root => {
+      const type = root.querySelector('[name=type]').value, title = root.querySelector('[name=title]').value.trim();
+      if (!title) { toast('請輸入標題', 'err'); return false; }
+      const t = now(), n = { id: uid(), caseId: ctx.c.id, type, code: nextCode(type, ctx.nodes), title, content: '', value: '', unit: '', formula: '', tolerance: '', refPath: '', datasetId: '', rowRef: '', reviewStatus: 'unreviewed', reviewedAt: null, createdAt: t, updatedAt: t };
+      await DB.put('nodes', n); State.sel = n.id; State.nf.type = 'all'; State.nf.q = ''; toast('已建立 ' + n.code, 'ok'); refresh();
+    }
+  });
+}
+function nodeDetail(n, ctx, an) {
+  const T = TYPES[n.type], iss = an.issues.get(n.id), atts = ctx.atts.filter(a => a.nodeId === n.id);
+  const revs = ctx.reviews.filter(r => r.nodeId === n.id).sort((a, b) => b.at.localeCompare(a.at));
+  const isNum = ['number', 'calc', 'data'].includes(n.type);
+  return `<h2>${T.icon} ${esc(n.code)} ${typeTag(n.type)} ${rstatTag(n.reviewStatus)}<span class="sp"></span>
+      <button class="btn sm" id="nd-impact">影響分析</button><button class="btn sm danger" id="nd-del">刪除</button></h2>
+    <div>${iss.length ? iss.map(i => `<div class="issue ${i.level}">${i.level === 'err' ? '🔴' : '🟡'} <b>${i.rule}</b> ${esc(RULES[i.rule].label)}：${esc(i.msg)}</div>`).join('') : '<div class="issue ok">✔ 本節點通過所有健康度規則</div>'}</div>
+    <div class="form2" style="margin-top:10px">
+      <div class="field"><label>類型（儲存後套用）</label><select name="type">${Object.entries(TYPES).map(([k, t]) => `<option value="${k}" ${k === n.type ? 'selected' : ''}>${t.icon} ${t.label}</option>`).join('')}</select></div>
+      <div class="field"><label>代號（公式以 {代號} 引用）</label><input name="code" value="${esc(n.code)}" class="mono"></div>
+      <div class="field full"><label>標題 *</label><input name="title" value="${esc(n.title)}"></div>
+      <div class="field full"><label>內容／說明</label><textarea name="content">${esc(n.content)}</textarea></div>
+      ${isNum ? `<div class="field"><label>${n.type === 'calc' ? '宣稱值（與重算值比對）' : '數值'}</label><input name="value" value="${esc(n.value)}"></div>
+        <div class="field"><label>單位</label><input name="unit" value="${esc(n.unit)}" placeholder="例如：百萬元、%"></div>
+        <div class="field"><label>容許誤差（空白＝預設 ${esc(ctx.tol)}）</label><input name="tolerance" value="${esc(n.tolerance)}"></div>` : ''}
+      ${n.type === 'calc' ? `<div class="field full"><label>公式（例：{N2} - {N1}；可用 SUM、ROUND、ABS；全形符號會自動轉半形）</label><div class="row"><input name="formula" value="${esc(n.formula)}" style="flex:1" class="mono"><button class="btn sm" id="nd-try">試算</button></div><div id="nd-try-out" class="muted" style="margin-top:4px"></div></div>` : ''}
+      ${n.type === 'data' ? `<div class="field"><label>來源資料集</label><select name="datasetId"><option value="">（無）</option>${ctx.datasets.map(d => `<option value="${esc(d.id)}" ${d.id === n.datasetId ? 'selected' : ''}>${esc(d.name)}</option>`).join('')}</select></div>
+        <div class="field"><label>列號／欄位說明</label><input name="rowRef" value="${esc(n.rowRef)}" placeholder="例如：第 1–4 列合計"></div>
+        ${n.src ? `<div class="field full muted">已綁定資料集欄位「${esc(n.src.col)}」（${{ sum: '合計', avg: '平均', count: '筆數', cell: '第 ' + n.src.row + ' 列單格' }[n.src.mode]}），系統會自動重算。</div>` : ''}` : ''}
+      ${n.type === 'evidence' ? `<div class="field full"><label>參考路徑／文號／系統畫面</label><input name="refPath" value="${esc(n.refPath)}" placeholder="例如：公文系統 文號、網路磁碟機路徑"></div>` : ''}
+    </div>
+    <div class="row"><button class="btn pri" id="nd-save">💾 儲存節點</button></div>
+    <h3>附件（存入瀏覽器 IndexedDB，單檔上限 ${Math.round(APP.maxAttach / 1048576)} MB）</h3>
+    ${atts.map(a => `<div class="lk"><a href="#" data-dl="${esc(a.id)}" class="tt">📎 ${esc(a.name)}</a>${tagHtml(fmtN(a.size / 1024, 1) + ' KB')}<button class="btn sm danger" data-rm="${esc(a.id)}">✕</button></div>`).join('') || '<div class="muted">尚無附件</div>'}
+    <div style="margin-top:6px"><input type="file" id="nd-file" multiple></div>
+    <h3>覆核 <button class="btn sm" data-rv="pass">✔ 通過</button> <button class="btn sm" data-rv="fix">需補件</button> <button class="btn sm danger" data-rv="reject">退回</button></h3>
+    ${revs.map(r => `<div class="lk"><span>${rstatTag(r.status)}</span><span class="tt" style="cursor:default" title="${esc(r.comment)}">${esc(r.comment)}</span><span class="muted">${esc(r.reviewer)}｜${esc(fmtD(r.at))}</span></div>`).join('') || '<div class="muted">尚無覆核紀錄</div>'}`;
+}
+function linkPanel(n, ctx, an) {
+  const outs = ctx.links.filter(l => l.fromId === n.id && an.byId.has(l.toId)), ins = ctx.links.filter(l => l.toId === n.id && an.byId.has(l.fromId));
+  const row = (l, otherId) => { const o = an.byId.get(otherId); return `<div class="lk"><span class="tag">${esc(REL[l.relation])}</span><span class="tt" data-go="${esc(o.id)}" title="${esc(o.title)}">${TYPES[o.type].icon} ${esc(o.code)} ${esc(o.title)}</span><button class="btn sm danger" data-ul="${esc(l.id)}">✕</button></div>`; };
+  const optsOut = ctx.nodes.filter(x => x.id !== n.id && !outs.some(l => l.toId === x.id)).map(x => `<option value="${esc(x.id)}">${esc(x.code)} ${esc(trunc(x.title, 16))}</option>`).join('');
+  const optsIn = ctx.nodes.filter(x => x.id !== n.id && !ins.some(l => l.fromId === x.id)).map(x => `<option value="${esc(x.id)}">${esc(x.code)} ${esc(trunc(x.title, 16))}</option>`).join('');
+  const relOpts = Object.entries(REL).map(([k, v]) => `<option value="${k}">${v}</option>`).join('');
+  return `<h2>連結</h2>
+    <h3>⬇ 上游（${esc(n.code)} 依據／來自）${tagHtml(outs.length)}</h3>${outs.map(l => row(l, l.toId)).join('') || '<div class="muted">尚無上游來源</div>'}
+    <div class="row" style="margin-top:6px"><select class="inp" id="la-o-rel">${relOpts}</select><select class="inp" id="la-o" style="flex:1;max-width:150px"><option value="">選擇上游節點…</option>${optsOut}</select><button class="btn sm pri" id="la-o-btn">＋</button></div>
+    <h3>⬆ 下游（引用 ${esc(n.code)} 者）${tagHtml(ins.length)}</h3>${ins.map(l => row(l, l.fromId)).join('') || '<div class="muted">尚無節點引用本節點</div>'}
+    <div class="row" style="margin-top:6px"><select class="inp" id="la-i-rel">${relOpts}</select><select class="inp" id="la-i" style="flex:1;max-width:150px"><option value="">選擇下游節點…</option>${optsIn}</select><button class="btn sm pri" id="la-i-btn">＋</button></div>
+    <p class="muted" style="font-size:12px;margin-top:14px">連結方向：<b>下游 → 上游</b>。例如「結論」連到「數字」，「數字」連到「計算」或「資料」，「資料」連到「佐證」。</p>`;
+}
+function bindNodeDetail(app, ctx, an, n) {
+  const nd = $('#nd', app), nl = $('#nl', app);
+  $('#nd-impact', nd).onclick = () => showImpact(ctx, an, n);
+  $('#nd-del', nd).onclick = async () => {
+    if (!await confirmBox(`確定刪除節點 ${n.code}？相關連結、覆核紀錄與附件將一併刪除。`, '刪除')) return;
+    await deleteNodeData(ctx, n.id); State.sel = null; toast('已刪除節點', 'ok'); refresh();
+  };
+  const tryBtn = $('#nd-try', nd);
+  if (tryBtn) tryBtn.onclick = () => {
+    const f = $('[name=formula]', nd).value, out = $('#nd-try-out', nd);
+    try { const v = evalFormula(f, r => { const t = an.codeMap.get(String(r).toUpperCase()); if (!t) throw new Error('找不到節點代號 {' + r + '}'); return an.evalNode(t, [n.id]); }); out.innerHTML = `<span style="color:var(--ok)">= ${esc(fmtV(v))}</span>`; }
+    catch (e) { out.innerHTML = `<span style="color:var(--err)">${esc(e.message)}</span>`; }
+  };
+  $('#nd-save', nd).onclick = async () => {
+    const g = k => nd.querySelector(`[name=${k}]`);
+    const fresh = await DB.get('nodes', n.id); const before = JSON.stringify(fresh);
+    const title = g('title').value.trim(); if (!title) return toast('請輸入標題', 'err');
+    const code = g('code').value.trim();
+    if (!/^[A-Za-z][A-Za-z0-9_]*$/.test(code)) return toast('代號須以英文字母開頭，僅含英數字或底線', 'err');
+    if (ctx.nodes.some(x => x.id !== n.id && x.code.toUpperCase() === code.toUpperCase())) return toast('代號已被其他節點使用', 'err');
+    const oldCode = fresh.code, type = g('type').value;
+    const next = { ...fresh, type, code, title, content: g('content').value.trim() };
+    if (g('value')) {
+      const raw = g('value').value.trim();
+      if (raw !== '' && toNum(raw) == null) return toast('數值欄位請輸入數字（可含千分位逗號）', 'err');
+      const tl = g('tolerance').value.trim(); if (tl !== '' && (toNum(tl) == null || toNum(tl) < 0)) return toast('容許誤差請輸入大於等於 0 的數字', 'err');
+      next.value = raw === '' ? '' : toNum(raw); next.unit = g('unit').value.trim(); next.tolerance = tl;
+    }
+    if (g('formula')) { const f = normFormula(g('formula').value).trim(); if (f) { try { parseFormula(f); } catch (e) { return toast('公式錯誤：' + e.message, 'err'); } } next.formula = f; }
+    if (g('refPath')) next.refPath = g('refPath').value.trim();
+    if (g('datasetId')) { const d = g('datasetId').value; if (d !== (fresh.datasetId || '')) next.src = null; next.datasetId = d; next.rowRef = g('rowRef').value.trim(); }
+    const renamed = oldCode.toUpperCase() !== code.toUpperCase();
+    const others = renamed ? ctx.nodes.filter(x => x.id !== n.id && normFormula(x.formula || '').includes('{')) : [];
+    const rewrites = others.map(x => ({ id: x.id, old: x.formula, f: normFormula(x.formula).replace(/\{([^}]+)\}/g, (m, r) => r.trim().toUpperCase() === oldCode.toUpperCase() ? '{' + code + '}' : m) })).filter(x => x.f !== normFormula(x.old));
+    const changed = JSON.stringify(next) !== before;
+    if (!changed && !rewrites.length) return toast('沒有變更', '');
+    if (changed) next.updatedAt = now();
+    await DB.put('nodes', next);
+    for (const r of rewrites) { const o = await DB.get('nodes', r.id); o.formula = r.f; o.updatedAt = now(); await DB.put('nodes', o); }
+    // 公式引用的節點自動補上「引用」連結（不會自動刪除舊連結）
+    if (next.type === 'calc' && next.formula) {
+      const lks = await DB.byIndex('links', 'byCase', ctx.c.id);
+      for (const ref of new Set(refsOf(next.formula))) {
+        const t = ctx.nodes.find(x => x.code.toUpperCase() === ref.toUpperCase());
+        if (t && t.id !== next.id && !lks.some(l => l.fromId === next.id && l.toId === t.id)) await DB.put('links', { id: uid(), caseId: ctx.c.id, fromId: next.id, toId: t.id, relation: 'references' });
+      }
+    }
+    const deps = [...reachFrom(an.adj.inn, n.id)].map(id => an.byId.get(id)).filter(x => x && x.reviewStatus === 'pass');
+    toast(deps.length ? `已儲存。受影響且已通過覆核的 ${deps.length} 個節點（${deps.map(x => x.code).join('、')}）已標示為「需重新覆核」` : '已儲存', 'ok');
+    refresh();
+  };
+  $$('[data-dl]', nd).forEach(a => a.onclick = async e => { e.preventDefault(); const f = await DB.get('attachments', a.dataset.dl); if (f && f.blob) download(f.name, f.blob); else toast('找不到附件內容', 'err'); });
+  $$('[data-rm]', nd).forEach(b => b.onclick = async () => { if (!await confirmBox('確定移除此附件？', '移除')) return; await DB.del('attachments', b.dataset.rm); await touchNode(n.id); refresh(); });
+  $('#nd-file', nd).onchange = async e => {
+    const all = [...e.target.files], fs = all.filter(f => f.size <= APP.maxAttach);
+    if (fs.length !== all.length) toast(`${all.filter(f => f.size > APP.maxAttach).map(f => f.name).join('、')} 超過 ${Math.round(APP.maxAttach / 1048576)} MB，未加入；請改填「參考路徑」`, 'err');
+    if (!fs.length) return;
+    await DB.tx(['attachments'], t => fs.forEach(f => t.objectStore('attachments').put({ id: uid(), nodeId: n.id, caseId: ctx.c.id, name: f.name, type: f.type, size: f.size, blob: f, createdAt: now() })));
+    await touchNode(n.id); toast(`已加入 ${fs.length} 個附件`, 'ok'); refresh();
+  };
+  $$('[data-rv]', nd).forEach(b => b.onclick = () => reviewDialog(ctx, n, b.dataset.rv));
+  $$('[data-go]', nl).forEach(e => e.onclick = () => { State.sel = e.dataset.go; refresh(); });
+  $$('[data-ul]', nl).forEach(b => b.onclick = async () => { await DB.del('links', b.dataset.ul); toast('已移除連結', 'ok'); refresh(); });
+  $('#la-o-btn', nl).onclick = async () => { const t = $('#la-o', nl).value; if (!t) return toast('請選擇節點', 'err'); if (await addLink(ctx, n.id, t, $('#la-o-rel', nl).value)) refresh(); };
+  $('#la-i-btn', nl).onclick = async () => { const f = $('#la-i', nl).value; if (!f) return toast('請選擇節點', 'err'); if (await addLink(ctx, f, n.id, $('#la-i-rel', nl).value)) refresh(); };
+  const setDefRel = (selId, relId, dir) => { $(selId, nl).onchange = e => { const o = an.byId.get(e.target.value); if (o) $(relId, nl).value = dir === 'o' ? defRel(n, o) : defRel(o, n); }; };
+  setDefRel('#la-o', '#la-o-rel', 'o'); setDefRel('#la-i', '#la-i-rel', 'i');
+}
+
+/* ---------- 佐證鏈地圖 ---------- */
+async function renderMap(app) {
+  const ctx = await needCase(app); if (!ctx) return;
+  const an = analyze(ctx);
+  const claims = ctx.nodes.filter(n => n.type === 'claim');
+  if (State.mapSel && !an.byId.has(State.mapSel)) State.mapSel = null;
+  app.innerHTML = `<div class="card"><h2>⭐ 佐證鏈地圖 ${tagHtml(ctx.c.name, 'gold')}<span class="sp"></span>
+      <label class="muted" style="font-size:12px">聚焦結論</label>
+      <select class="inp" id="m-claim"><option value="">（全部）</option>${claims.map(c => `<option value="${esc(c.id)}" ${c.id === State.mapSel ? 'selected' : ''}>${esc(c.code)} ${esc(trunc(c.title, 22))}</option>`).join('')}</select>
+      <button class="btn" id="m-clear">取消選取</button></h2>
+    <div class="stats" style="margin-bottom:8px">
+      <div class="stat"><div class="v">${pctTxt(an.pct)}</div><div class="l">鏈完整度（${an.claimsComplete}／${an.claimsTotal} 個結論）</div></div>
+      <div class="stat ${an.cnt.R1 ? 'bad' : ''}"><div class="v">${an.cnt.R1}</div><div class="l">無來源數字</div></div>
+      <div class="stat ${an.cnt.R2 ? 'bad' : ''}"><div class="v">${an.cnt.R2}</div><div class="l">核驗不符</div></div>
+      <div class="stat ${an.cnt.R3 ? 'bad' : ''}"><div class="v">${an.cnt.R3}</div><div class="l">空佐證</div></div></div>
+    <div class="legend">${Object.values(TYPES).map(t => `<span><i style="background:${t.color}"></i>${t.icon}${t.label}</span>`).join('')}
+      <span><b style="color:#c62828">✕ 紅色虛線</b>＝斷鏈（無上游來源）</span><span><b style="color:#8a1538">紅線</b>＝選取節點的上游路徑</span><span><b style="color:#1565c0">藍線</b>＝引用選取節點的下游路徑</span><span>紅框／紅點＝有問題</span><span>虛線外框＝孤立節點（未被結論引用）</span></div>
+    <div class="map-wrap" id="m-wrap">${buildMap(ctx, an)}</div></div>
+    <div class="card" id="m-info"></div>`;
+  const wrap = $('#m-wrap', app);
+  const info = id => {
+    const box = $('#m-info', app);
+    if (!id) { box.innerHTML = '<div class="muted">點選地圖中的節點，即可高亮其上下游路徑並查看問題。</div>'; return; }
+    const n = an.byId.get(id), iss = an.issues.get(id), up = an.reachOut(id).size, down = reachFrom(an.adj.inn, id).size;
+    box.innerHTML = `<h2>${TYPES[n.type].icon} ${esc(n.code)} ${esc(n.title)} ${typeTag(n.type)} ${rstatTag(n.reviewStatus)}<span class="sp"></span><button class="btn sm pri" id="mi-open">開啟節點工作台</button></h2>
+      <p class="muted">${esc(n.content || '')}</p><p>上游節點 <b>${up}</b> 個／下游（引用者）<b>${down}</b> 個${toNum(n.value) != null ? `／數值 <b>${esc(fmtV(toNum(n.value)))}</b> ${esc(n.unit || '')}` : ''}</p>
+      ${iss.length ? iss.map(i => `<div class="issue ${i.level}">${i.level === 'err' ? '🔴' : '🟡'} <b>${i.rule}</b> ${esc(i.msg)}</div>`).join('') : '<div class="issue ok">✔ 本節點通過所有健康度規則</div>'}`;
+    $('#mi-open', box).onclick = () => openNode(ctx.c.id, id);
+  };
+  const pick = id => { State.mapSel = id; mapHighlight(wrap, an, id); info(id); const cs = $('#m-claim', app); cs.value = an.byId.get(id)?.type === 'claim' ? id : ''; };
+  $$('.mnode', wrap).forEach(g => g.onclick = () => pick(g.dataset.id));
+  $('#m-claim', app).onchange = e => pick(e.target.value || null);
+  $('#m-clear', app).onclick = () => { State.mapSel = null; $('#m-claim', app).value = ''; mapHighlight(wrap, an, null); info(null); };
+  mapHighlight(wrap, an, State.mapSel); info(State.mapSel);
+}
+
+/* ---------- 數字核驗 ---------- */
+async function renderVerify(app) {
+  const ctx = await needCase(app); if (!ctx) return;
+  const an = analyze(ctx); const st = State.sorts.verify;
+  const COLS = [
+    { key: 'code', label: '代號' }, { key: 'kind', label: '核驗類型' }, { key: 'formula', label: '公式／來源' },
+    { key: 'declared', label: '宣稱值', num: true }, { key: 'recomputed', label: '重算值', num: true },
+    { key: 'diff', label: '差異', num: true }, { key: 'tol', label: '容許誤差', num: true }, { key: 'ok', label: '燈號', get: r => r.ok ? '相符' : '不符' }
+  ];
+  const rows = sortRows(an.verify, st, COLS);
+  const bad = an.verify.filter(r => !r.ok).length;
+  const vals = ctx.nodes.filter(n => ['number', 'calc', 'data'].includes(n.type));
+  app.innerHTML = `<div class="card"><h2>🧮 數字核驗 ${tagHtml(ctx.c.name, 'gold')} ${tagHtml(bad ? `🔴 ${bad} 項不符` : '🟢 全部相符', bad ? 'err' : 'ok')}<span class="sp"></span>
+      <button class="btn" id="v-csv">CSV</button></h2>
+    <p class="muted">系統依公式重新計算，並與節點上的宣稱值比對；差異超過容許誤差即亮紅燈。涵蓋：計算節點、數字對其推導計算、資料節點對資料集。</p>
+    ${rows.length ? `<table class="grid"><thead><tr>${thHtml(COLS, st)}<th>說明</th><th></th></tr></thead><tbody>${rows.map(r => `<tr>
+      <td class="mono"><a href="#" data-open="${esc(r.nodeId)}">${esc(r.code)}</a><br><span class="muted">${esc(trunc(r.title, 14))}</span></td><td>${esc(r.kind)}</td>
+      <td class="mono" style="font-size:12px">${esc(r.formula || '')}${r.resolved ? `<br><span class="muted">= ${esc(r.resolved)}</span>` : ''}</td>
+      <td class="num">${esc(fmtV(r.declared))}</td><td class="num">${esc(fmtV(r.recomputed))}</td><td class="num">${esc(fmtV(r.diff))}</td><td class="num">${esc(fmtV(r.tol))}</td>
+      <td>${r.ok ? tagHtml('🟢 相符', 'ok') : tagHtml('🔴 不符', 'err')}</td><td>${esc(r.msg || '')}</td>
+      <td>${!r.ok && r.recomputed != null ? `<button class="btn sm" data-apply="${esc(r.nodeId)}|${r.recomputed}">採用重算值</button>` : ''}</td></tr>`).join('')}</tbody></table>`
+      : '<div class="empty">尚無可核驗項目。請在「計算」節點填寫公式，或在「資料」節點綁定資料集欄位。</div>'}</div>
+    <div class="card"><h2>公式試算</h2>
+      <div class="row"><input class="inp mono" id="v-f" style="flex:1;min-width:260px" placeholder="例如：ROUND({N2}/{N4}*100,1)"><button class="btn pri" id="v-try">試算</button></div>
+      <div id="v-out" style="margin:6px 0;min-height:22px"></div>
+      <div class="muted" style="font-size:12px">點選下列代號可插入公式：</div>
+      <div>${vals.map(n => `<span class="formula-chip" data-ins="${esc(n.code)}" title="${esc(n.title)}">{${esc(n.code)}} ${esc(trunc(n.title, 8))}${toNum(n.value) != null ? '＝' + esc(fmtV(toNum(n.value))) : ''}</span>`).join('') || '<span class="muted">尚無數值節點</span>'}</div></div>`;
+  bindSort(app, st, refresh);
+  $('#v-csv', app).onclick = () => download(`${APP.filePrefix}_數字核驗_${safeName(ctx.c.name)}_${today()}.csv`, toCSV(rows, COLS), 'text/csv;charset=utf-8');
+  $$('[data-open]', app).forEach(a => a.onclick = e => { e.preventDefault(); openNode(ctx.c.id, a.dataset.open); });
+  $$('[data-apply]', app).forEach(b => b.onclick = async () => {
+    const [id, v] = b.dataset.apply.split('|'); const n = await DB.get('nodes', id);
+    if (!await confirmBox(`將 ${n.code} 的數值改為重算值 ${fmtV(+v)}？此變更會使已通過覆核的下游節點標示為需重新覆核。`, '採用')) return;
+    n.value = roundTo(+v, 6); n.updatedAt = now(); await DB.put('nodes', n); toast('已採用重算值', 'ok'); refresh();
+  });
+  $('#v-try', app).onclick = () => {
+    const out = $('#v-out', app);
+    try { const v = evalFormula($('#v-f', app).value, r => { const t = an.codeMap.get(String(r).toUpperCase()); if (!t) throw new Error('找不到節點代號 {' + r + '}'); return an.evalNode(t, []); }); out.innerHTML = `<b style="color:var(--ok)">結果：${esc(fmtV(v))}</b>`; }
+    catch (e) { out.innerHTML = `<b style="color:var(--err)">${esc(e.message)}</b>`; }
+  };
+  $$('[data-ins]', app).forEach(c => c.onclick = () => { const i = $('#v-f', app); i.value += '{' + c.dataset.ins + '}'; i.focus(); });
+}
+
+/* ---------- 資料匯入 ---------- */
+function parseDelimited(text) {
+  text = text.replace(/^\uFEFF/, '');
+  const first = text.split(/\r?\n/, 1)[0];
+  const d = first.includes('\t') ? '\t' : ',', rows = []; let row = [], cur = '', q = false;
+  for (let i = 0; i < text.length; i++) {
+    const ch = text[i];
+    if (q) { if (ch === '"') { if (text[i + 1] === '"') { cur += '"'; i++; } else q = false; } else cur += ch; }
+    else if (ch === '"' && cur === '') q = true;
+    else if (ch === d) { row.push(cur); cur = ''; }
+    else if (ch === '\n' || ch === '\r') { if (ch === '\r' && text[i + 1] === '\n') i++; row.push(cur); cur = ''; rows.push(row); row = []; }
+    else cur += ch;
+  }
+  if (cur !== '' || row.length) { row.push(cur); rows.push(row); }
+  return rows.filter(r => r.some(c => String(c).trim() !== ''));
+}
+function buildDataset(text, hasHeader, name, caseId) {
+  const raw = parseDelimited(text); if (raw.length < (hasHeader ? 2 : 1)) throw new Error('沒有可匯入的資料列');
+  const w = Math.max(...raw.map(r => r.length));
+  const grid = raw.map(r => Array.from({ length: w }, (_, i) => String(r[i] ?? '').trim()));
+  let columns = hasHeader ? grid.shift().map((c, i) => c || '欄' + (i + 1)) : Array.from({ length: w }, (_, i) => '欄' + (i + 1));
+  columns = columns.map((c, i) => columns.indexOf(c) === i ? c : c + '_' + (i + 1));
+  // 數值欄判斷：前導 0（如戶號 00123）或 16 位以上長數字視為文字，避免被轉成數字而失真
+  const numeric = columns.map((_, ci) => grid.every(r => r[ci] === '' || toNum(r[ci]) != null) && grid.some(r => r[ci] !== '') && !grid.some(r => /^[+-]?0\d|^\d{16,}$/.test(r[ci])));
+  const rows = grid.map(r => r.map((v, ci) => numeric[ci] && v !== '' ? toNum(v) : v));
+  return { id: uid(), caseId, name, columns, rows, importedAt: now() };
+}
+async function renderImport(app) {
+  const ctx = await needCase(app); if (!ctx) return;
+  app.innerHTML = `<div class="card"><h2>資料匯入 ${tagHtml(ctx.c.name, 'gold')}</h2>
+      <p class="muted">從 Excel 複製儲存格範圍後貼上（TSV），或匯入 CSV 檔。資料只存在本機瀏覽器，並歸屬於目前案件。前導 0 的欄位（如戶號）會保留為文字。</p>
+      <div class="row"><div class="field" style="flex:1;min-width:240px"><label>資料集名稱 *</label><input id="i-name" placeholder="例如：不動產暴險明細"></div>
+      <label style="margin-top:8px"><input type="checkbox" id="i-hdr" checked> 第一列為欄位名稱</label></div>
+      <div class="field"><label>貼上表格內容</label><textarea id="i-text" style="min-height:140px" class="mono" placeholder="案號&#9;暴險額&#9;風險權數&#10;A001&#9;1200&#9;35"></textarea></div>
+      <div class="row"><button class="btn pri" id="i-save">解析並儲存</button><button class="btn" id="i-csv">匯入 CSV 檔…</button></div></div>
+    <div class="card"><h2>本案資料集 ${tagHtml(ctx.datasets.length)}</h2>
+      ${ctx.datasets.length ? `<table class="grid"><thead><tr><th>名稱</th><th>欄位</th><th class="num">列數</th><th>匯入時間</th><th></th></tr></thead><tbody>
+      ${ctx.datasets.map(d => `<tr><td><b>${esc(d.name)}</b></td><td>${esc(d.columns.join('、'))}</td><td class="num">${d.rows.length}</td><td>${esc(fmtD(d.importedAt))}</td>
+        <td style="white-space:nowrap"><button class="btn sm" data-pv="${esc(d.id)}">預覽</button> <button class="btn sm pri" data-mk="${esc(d.id)}">建立資料節點</button> <button class="btn sm danger" data-del="${esc(d.id)}">🗑</button></td></tr>`).join('')}</tbody></table>`
+      : '<div class="empty">尚無資料集</div>'}</div>`;
+  const save = async (text, name) => {
+    try {
+      const ds = buildDataset(text, $('#i-hdr', app).checked, name, ctx.c.id);
+      await DB.put('datasets', ds); toast(`已儲存資料集「${name}」：${ds.rows.length} 列、${ds.columns.length} 欄`, 'ok'); refresh();
+    } catch (e) { toast('匯入失敗：' + e.message, 'err'); }
+  };
+  $('#i-save', app).onclick = () => { const nm = $('#i-name', app).value.trim(), tx = $('#i-text', app).value; if (!nm) return toast('請輸入資料集名稱', 'err'); if (!tx.trim()) return toast('請貼上表格內容', 'err'); save(tx, nm); };
+  $('#i-csv', app).onclick = () => {
+    const inp = $('#file-csv'); inp.value = '';
+    inp.onchange = async () => { const f = inp.files[0]; if (!f) return; const nm = $('#i-name', app).value.trim() || f.name.replace(/\.[^.]+$/, ''); save(await readText(f), nm); };
+    inp.click();
+  };
+  $$('[data-pv]', app).forEach(b => b.onclick = () => previewDataset(ctx.datasets.find(d => d.id === b.dataset.pv)));
+  $$('[data-mk]', app).forEach(b => b.onclick = () => makeDataNode(ctx, ctx.datasets.find(d => d.id === b.dataset.mk)));
+  $$('[data-del]', app).forEach(b => b.onclick = async () => {
+    const ds = ctx.datasets.find(d => d.id === b.dataset.del); const used = ctx.nodes.filter(n => n.datasetId === ds.id);
+    if (!await confirmBox(`刪除資料集「${ds.name}」？${used.length ? `有 ${used.length} 個資料節點引用它，將解除綁定（數值保留）。` : ''}`, '刪除')) return;
+    await DB.tx(['datasets', 'nodes'], t => { t.objectStore('datasets').delete(ds.id); used.forEach(n => t.objectStore('nodes').put({ ...n, datasetId: '', src: null, updatedAt: now() })); });
+    toast('已刪除資料集', 'ok'); refresh();
+  });
+}
+function previewDataset(ds) {
+  const num = ds.columns.map((_, i) => ds.rows.every(r => r[i] === '' || typeof r[i] === 'number'));
+  modal({
+    title: `資料集預覽：${ds.name}（${ds.rows.length} 列）`, ok: '', cancel: '關閉', wide: true,
+    body: `<div style="overflow:auto;max-height:60vh"><table class="grid"><thead><tr><th class="num">#</th>${ds.columns.map((c, i) => `<th class="${num[i] ? 'num' : ''}">${esc(c)}</th>`).join('')}</tr></thead><tbody>
+      ${ds.rows.slice(0, 200).map((r, ri) => `<tr><td class="num muted">${ri + 1}</td>${r.map((v, i) => `<td class="${num[i] ? 'num' : ''}">${esc(num[i] ? fmtV(v) : v)}</td>`).join('')}</tr>`).join('')}</tbody></table></div>${ds.rows.length > 200 ? '<p class="muted">僅顯示前 200 列</p>' : ''}`
+  });
+}
+async function makeDataNode(ctx, ds) {
+  const num = ds.columns.map((_, i) => ds.rows.some(r => typeof r[i] === 'number'));
+  const body = document.createElement('div');
+  body.innerHTML = `<div class="field"><label>欄位</label><select name="col">${ds.columns.map((c, i) => `<option value="${esc(c)}">${esc(c)}${num[i] ? '（數值）' : ''}</option>`).join('')}</select></div>
+    <div class="row"><div class="field" style="flex:1"><label>取值方式</label><select name="mode"><option value="sum">合計</option><option value="avg">平均</option><option value="count">筆數</option><option value="cell">單一儲存格（指定列號）</option></select></div>
+    <div class="field" style="width:110px"><label>列號（單格）</label><input name="row" type="number" min="1" max="${ds.rows.length}" value="1"></div></div>
+    <div class="field"><label>節點標題 *</label><input name="title"></div>`;
+  const col = body.querySelector('[name=col]'), mode = body.querySelector('[name=mode]'), title = body.querySelector('[name=title]');
+  const sync = () => { title.value = `${ds.name}｜${col.value}${{ sum: '合計', avg: '平均', count: '筆數', cell: '' }[mode.value]}`; };
+  col.onchange = sync; mode.onchange = sync; sync();
+  await modal({
+    title: `由資料集建立資料節點：${ds.name}`, body, ok: '建立',
+    onOk: async root => {
+      const v = n => root.querySelector(`[name=${n}]`).value.trim();
+      const src = { col: v('col'), mode: v('mode'), row: +v('row') || 1 }; let val;
+      try { val = datasetCalc(ds, src); } catch (e) { toast(e.message, 'err'); return false; }
+      if (!v('title')) { toast('請輸入標題', 'err'); return false; }
+      const t = now(), n = { id: uid(), caseId: ctx.c.id, type: 'data', code: nextCode('data', ctx.nodes), title: v('title'), content: '', value: roundTo(val, 6), unit: '', formula: '', tolerance: '', refPath: '', datasetId: ds.id, src, rowRef: `${ds.name}｜${src.col}｜${{ sum: '合計', avg: '平均', count: '筆數', cell: '第' + src.row + '列' }[src.mode]}`, reviewStatus: 'unreviewed', reviewedAt: null, createdAt: t, updatedAt: t };
+      await DB.put('nodes', n); State.sel = n.id; toast(`已建立 ${n.code}，數值 ${fmtV(n.value)}（來源列號已記錄）`, 'ok'); location.hash = 'nodes';
+    }
+  });
+}
+
+/* ---------- 覆核 ---------- */
+async function renderReview(app) {
+  const ctx = await needCase(app); if (!ctx) return;
+  const an = analyze(ctx), st = State.sorts.review;
+  let rows = ctx.nodes.map(n => {
+    const last = ctx.reviews.filter(r => r.nodeId === n.id).sort((a, b) => b.at.localeCompare(a.at))[0] || {};
+    const re = an.issues.get(n.id).some(i => i.rule === 'R5');
+    return { id: n.id, code: n.code, typeL: TYPES[n.type].label, type: n.type, title: n.title, status: n.reviewStatus || 'unreviewed', statusL: RSTAT[n.reviewStatus || 'unreviewed'][0] + (re ? '（需重新覆核）' : ''), re, comment: last.comment || '', reviewer: last.reviewer || '', at: last.at || '', issueN: an.issues.get(n.id).length };
+  });
+  const f = State.rvStatus, q = State.q.review.trim().toLowerCase();
+  if (f !== 'all') rows = rows.filter(r => f === 'R5' ? r.re : r.status === f);
+  if (q) rows = rows.filter(r => (r.code + r.title + r.comment).toLowerCase().includes(q));
+  const COLS = [{ key: 'code', label: '代號' }, { key: 'typeL', label: '類型' }, { key: 'title', label: '標題' }, { key: 'statusL', label: '覆核狀態' }, { key: 'comment', label: '最近意見' }, { key: 'reviewer', label: '覆核人' }, { key: 'at', label: '時間', get: r => fmtD(r.at), sortVal: r => r.at }, { key: 'issueN', label: '問題數', num: true }];
+  rows = sortRows(rows, st, COLS);
+  const sum = s => ctx.nodes.filter(n => (n.reviewStatus || 'unreviewed') === s).length;
+  app.innerHTML = `<div class="card"><h2>覆核 ${tagHtml(ctx.c.name, 'gold')}<span class="sp"></span>
+      <select class="inp" id="r-f">${[['all', '全部狀態'], ['unreviewed', '未覆核'], ['pass', '通過'], ['fix', '需補件'], ['reject', '退回'], ['R5', '需重新覆核']].map(([k, v]) => `<option value="${k}" ${f === k ? 'selected' : ''}>${v}</option>`).join('')}</select>
+      <input class="inp" id="r-q" placeholder="搜尋…" value="${esc(State.q.review)}"><button class="btn" id="r-csv">CSV</button></h2>
+    <div class="row" style="margin-bottom:8px">${tagHtml('未覆核 ' + sum('unreviewed'))}${tagHtml('通過 ' + sum('pass'), 'ok')}${tagHtml('需補件 ' + sum('fix'), 'warn')}${tagHtml('退回 ' + sum('reject'), 'err')}${tagHtml('需重新覆核 ' + an.cnt.R5, 'warn')}</div>
+    ${rows.length ? `<table class="grid"><thead><tr>${thHtml(COLS, st)}<th>覆核</th></tr></thead><tbody>${rows.map(r => `<tr>
+      <td class="mono"><a href="#" data-open="${esc(r.id)}">${esc(r.code)}</a></td><td>${typeTag(r.type)}</td><td>${esc(r.title)}</td><td>${rstatTag(r.status)}${r.re ? ' ' + tagHtml('需重新覆核', 'warn') : ''}</td>
+      <td>${esc(trunc(r.comment, 30))}</td><td>${esc(r.reviewer)}</td><td>${esc(fmtD(r.at))}</td><td class="num">${r.issueN || ''}</td>
+      <td style="white-space:nowrap"><button class="btn sm" data-rv="${esc(r.id)}|pass">✔ 通過</button> <button class="btn sm" data-rv="${esc(r.id)}|fix">補件</button> <button class="btn sm danger" data-rv="${esc(r.id)}|reject">退回</button></td></tr>`).join('')}</tbody></table>` : '<div class="empty">沒有符合的節點</div>'}</div>`;
+  bindQ(app, '#r-q', State.q, 'review'); bindSort(app, st, refresh);
+  $('#r-f', app).onchange = e => { State.rvStatus = e.target.value; refresh(); };
+  $('#r-csv', app).onclick = () => download(`${APP.filePrefix}_覆核紀錄_${safeName(ctx.c.name)}_${today()}.csv`, toCSV(rows, COLS), 'text/csv;charset=utf-8');
+  $$('[data-open]', app).forEach(a => a.onclick = e => { e.preventDefault(); openNode(ctx.c.id, a.dataset.open); });
+  $$('[data-rv]', app).forEach(b => b.onclick = () => { const [id, s] = b.dataset.rv.split('|'); reviewDialog(ctx, an.byId.get(id), s); });
+}
+
+/* ---------- 缺證清單 ---------- */
+const GAP_COLS = [
+  { key: 'level', label: '等級', get: r => r.level === 'err' ? '嚴重' : '注意', sortVal: r => r.level === 'err' ? 0 : 1 }, { key: 'ruleLabel', label: '規則', get: r => r.rule + ' ' + r.ruleLabel },
+  { key: 'code', label: '代號' }, { key: 'typeL', label: '類型', get: r => TYPES[r.type].label }, { key: 'title', label: '標題' }, { key: 'msg', label: '說明' }
+];
+function buildLetter(ctx, an) {
+  const g = {}; an.gaps.forEach(x => (g[x.rule] = g[x.rule] || []).push(x));
+  const order = ['R0', 'R1', 'R2', 'R3', 'RV', 'R5', 'R4', 'R6'], zh = '一二三四五六七八九';
+  let i = 0, body = '';
+  order.filter(r => g[r]).forEach(r => { body += `${zh[i++]}、${RULES[r].label}（${g[r].length} 項）\n` + g[r].map((x, k) => `  ${k + 1}. [${x.code}] ${x.title}：${x.msg}`).join('\n') + '\n\n'; });
+  if (!body) body = '（目前沒有缺證事項）\n\n';
+  return `${ctx.c.owner || '承辦同仁'} 您好：\n\n本案「${ctx.c.name}」${ctx.c.baseDate ? '（基準日 ' + fmtROC(ctx.c.baseDate) + '）' : ''}經佐證鏈核對，鏈完整度為 ${pctTxt(an.pct)}（${an.claimsComplete}／${an.claimsTotal} 個結論），下列事項請${ctx.c.dueDate ? '於 ' + fmtROC(ctx.c.dueDate) + ' 前' : '儘速'}補件或更正：\n\n${body}請補充來源資料、佐證附件，或更正數值後回復確認，謝謝。\n\n覆核人：${ctx.c.reviewer || ''}\n日期：${fmtROC(todayISO())}`;
+}
+async function renderGaps(app) {
+  const ctx = await needCase(app); if (!ctx) return;
+  const an = analyze(ctx), st = State.sorts.gaps;
+  let rows = an.gaps; const q = State.q.gaps.trim().toLowerCase();
+  if (State.gapRule !== 'all') rows = rows.filter(r => r.rule === State.gapRule);
+  if (q) rows = rows.filter(r => (r.code + r.title + r.msg).toLowerCase().includes(q));
+  rows = sortRows(rows, st, GAP_COLS);
+  app.innerHTML = `<div class="card"><h2>缺證清單 ${tagHtml(ctx.c.name, 'gold')} ${tagHtml(an.gaps.length + ' 項', an.gaps.length ? 'err' : 'ok')}<span class="sp"></span>
+      <select class="inp" id="g-f"><option value="all">全部規則</option>${Object.entries(RULES).map(([k, v]) => `<option value="${k}" ${State.gapRule === k ? 'selected' : ''}>${k} ${v.label}（${an.cnt[k]}）</option>`).join('')}</select>
+      <input class="inp" id="g-q" placeholder="搜尋…" value="${esc(State.q.gaps)}"><button class="btn" id="g-csv">CSV</button><button class="btn pri" id="g-mail">✉ 產生補件通知信</button></h2>
+    ${rows.length ? `<table class="grid"><thead><tr>${thHtml(GAP_COLS, st)}</tr></thead><tbody>${rows.map(r => `<tr>
+      <td>${tagHtml(r.level === 'err' ? '🔴 嚴重' : '🟡 注意', r.level)}</td><td>${esc(r.rule)} ${esc(r.ruleLabel)}</td>
+      <td class="mono"><a href="#" data-open="${esc(r.nodeId)}">${esc(r.code)}</a></td><td>${typeTag(r.type)}</td><td>${esc(r.title)}</td><td>${esc(r.msg)}</td></tr>`).join('')}</tbody></table>`
+      : '<div class="issue ok">✔ 沒有缺證事項</div>'}</div>`;
+  bindQ(app, '#g-q', State.q, 'gaps'); bindSort(app, st, refresh);
+  $('#g-f', app).onchange = e => { State.gapRule = e.target.value; refresh(); };
+  $('#g-csv', app).onclick = () => download(`${APP.filePrefix}_缺證清單_${safeName(ctx.c.name)}_${today()}.csv`, toCSV(rows, GAP_COLS), 'text/csv;charset=utf-8');
+  $$('[data-open]', app).forEach(a => a.onclick = e => { e.preventDefault(); openNode(ctx.c.id, a.dataset.open); });
+  $('#g-mail', app).onclick = async () => {
+    const text = buildLetter(ctx, an), body = document.createElement('div');
+    body.innerHTML = `<p class="muted">可直接複製貼到 Outlook。內容依目前缺證清單自動產生。</p><pre class="letter" id="lt">${esc(text)}</pre>`;
+    await modal({ title: '補件通知信稿', body, ok: '複製全文', cancel: '關閉', wide: true, onOk: async () => { const ok = await copyText(text); toast(ok ? '已複製到剪貼簿' : '複製失敗，請手動選取', ok ? 'ok' : 'err'); return false; } });
+  };
+}
+
+/* ---------- 查核報告 ---------- */
+function summaryTable(ctx, an) {
+  const items = [['鏈完整度', `<b>${pctTxt(an.pct)}</b>（${an.claimsComplete}／${an.claimsTotal}）`], ['節點數', ctx.nodes.length], ['待覆核', an.pending],
+    ...['R0', 'R1', 'R2', 'R3', 'R4', 'R5', 'R6', 'RV'].map(r => [RULES[r].label, an.cnt[r]])];
+  let h = '<table>';
+  for (let i = 0; i < items.length; i += 3) h += '<tr>' + [0, 1, 2].map(k => items[i + k] ? `<th>${items[i + k][0]}</th><td>${items[i + k][1]}</td>` : '<th></th><td></td>').join('') + '</tr>';
+  return h + '</table>';
+}
+function reportHTML(ctx, an) {
+  const c = ctx.c;
+  return `<div class="rpt"><h1>${esc(c.name)} 佐證鏈查核報告</h1>
+    <table><tr><th>基準日</th><td>${esc(fmtROC(c.baseDate))}</td><th>狀態</th><td>${esc(c.status)}</td><th>截止日</th><td>${esc(fmtROC(c.dueDate))}</td></tr>
+    <tr><th>承辦</th><td>${esc(c.owner)}</td><th>覆核者</th><td>${esc(c.reviewer)}</td><th>產出時間</th><td>${esc(fmtD(now()))}</td></tr>
+    ${c.note ? `<tr><th>備註</th><td colspan="5">${esc(c.note)}</td></tr>` : ''}</table>
+    <h2>一、鏈完整度摘要</h2>${summaryTable(ctx, an)}
+    <h2>二、佐證鏈地圖</h2>${buildMap(ctx, an, { fit: true })}
+    <h2>三、節點明細</h2><table><thead><tr><th>代號</th><th>類型</th><th>標題</th><th>數值</th><th>公式／來源</th><th>覆核</th><th>問題</th></tr></thead><tbody>
+    ${ctx.nodes.map(n => `<tr><td>${esc(n.code)}</td><td>${TYPES[n.type].label}</td><td>${esc(n.title)}${n.content ? `<br><small>${esc(n.content)}</small>` : ''}</td><td style="text-align:right">${toNum(n.value) != null ? esc(fmtV(toNum(n.value))) + ' ' + esc(n.unit || '') : ''}</td>
+      <td>${esc(n.type === 'calc' ? n.formula : n.type === 'data' ? n.rowRef : n.type === 'evidence' ? (n.refPath || (ctx.atts.filter(a => a.nodeId === n.id).map(a => a.name).join('、'))) : '')}</td>
+      <td>${esc(RSTAT[n.reviewStatus || 'unreviewed'][0])}</td><td>${esc(an.issues.get(n.id).map(i => i.rule).join('、'))}</td></tr>`).join('')}</tbody></table>
+    <h2>四、覆核紀錄</h2>${ctx.reviews.length ? `<table><thead><tr><th>時間</th><th>節點</th><th>結果</th><th>意見</th><th>覆核人</th></tr></thead><tbody>${ctx.reviews.slice().sort((a, b) => a.at.localeCompare(b.at)).map(r => `<tr><td>${esc(fmtD(r.at))}</td><td>${esc(an.byId.get(r.nodeId)?.code || '（已刪除）')}</td><td>${esc(RSTAT[r.status][0])}</td><td>${esc(r.comment)}</td><td>${esc(r.reviewer)}</td></tr>`).join('')}</tbody></table>` : '<p>尚無覆核紀錄。</p>'}
+    <h2>五、缺證事項</h2>${an.gaps.length ? `<table><thead><tr><th>等級</th><th>規則</th><th>代號</th><th>標題</th><th>說明</th></tr></thead><tbody>${an.gaps.map(g => `<tr><td>${g.level === 'err' ? '嚴重' : '注意'}</td><td>${esc(g.rule + ' ' + g.ruleLabel)}</td><td>${esc(g.code)}</td><td>${esc(g.title)}</td><td>${esc(g.msg)}</td></tr>`).join('')}</tbody></table>` : '<p>無缺證事項。</p>'}</div>`;
+}
+async function renderReport(app) {
+  const ctx = await needCase(app); if (!ctx) return;
+  const an = analyze(ctx);
+  app.innerHTML = `<div class="card"><h2>查核報告預覽<span class="sp"></span><button class="btn pri" id="rp-print">🖨 列印／另存 PDF（A4）</button></h2>${reportHTML(ctx, an)}</div>`;
+  $('#rp-print', app).onclick = printReport;
+}
+async function printReport() {
+  const ctx = await loadCtx(State.case); if (!ctx) return toast('請先選擇案件', 'err');
+  $('#print-area').innerHTML = reportHTML(ctx, analyze(ctx));
+  window.print();
+}
+
+/* ---------- 資料管理 ---------- */
+async function exportExcelAll() {
+  const all = await loadAll(); if (!all.length) return toast('尚無資料可匯出', 'err');
+  const caseRows = all.map(({ ctx, an }) => ({ ...ctx.c, nodes: ctx.nodes.length, pct: an.pct == null ? '' : Math.round(an.pct) + '%', gaps: an.gaps.length }));
+  const nodeRows = all.flatMap(({ ctx, an }) => ctx.nodes.map(n => ({ ...n, caseName: ctx.c.name, typeL: TYPES[n.type].label, rs: RSTAT[n.reviewStatus || 'unreviewed'][0], iss: an.issues.get(n.id).map(i => i.rule + ' ' + i.msg).join('；') })));
+  const linkRows = all.flatMap(({ ctx, an }) => ctx.links.filter(l => an.byId.has(l.fromId) && an.byId.has(l.toId)).map(l => ({ caseName: ctx.c.name, f: an.byId.get(l.fromId), t: an.byId.get(l.toId), rel: REL[l.relation] })));
+  const revRows = all.flatMap(({ ctx, an }) => ctx.reviews.map(r => ({ ...r, caseName: ctx.c.name, code: an.byId.get(r.nodeId)?.code || '', st: RSTAT[r.status][0] })));
+  const gapRows = all.flatMap(x => x.an.gaps);
+  const xml = toExcelXML([
+    { name: '案件', cols: CASE_COLS.map(c => ({ ...c, get: r => c.key === 'baseDate' || c.key === 'dueDate' ? fmtROC(r[c.key]) : r[c.key] })), rows: caseRows },
+    { name: '節點', cols: [{ label: '案件', key: 'caseName' }, { label: '代號', key: 'code' }, { label: '類型', key: 'typeL' }, { label: '標題', key: 'title' }, { label: '內容', key: 'content' }, { label: '數值', get: r => toNum(r.value) ?? '' }, { label: '單位', key: 'unit' }, { label: '公式', key: 'formula' }, { label: '覆核狀態', key: 'rs' }, { label: '問題', key: 'iss' }], rows: nodeRows },
+    { name: '連結', cols: [{ label: '案件', key: 'caseName' }, { label: '從（下游）', get: r => r.f.code }, { label: '標題', get: r => r.f.title }, { label: '關係', key: 'rel' }, { label: '到（上游）', get: r => r.t.code }, { label: '標題', get: r => r.t.title }], rows: linkRows },
+    { name: '覆核紀錄', cols: [{ label: '案件', key: 'caseName' }, { label: '節點', key: 'code' }, { label: '結果', key: 'st' }, { label: '意見', key: 'comment' }, { label: '覆核人', key: 'reviewer' }, { label: '時間', get: r => fmtD(r.at) }], rows: revRows },
+    { name: '缺證事項', cols: [{ label: '案件', key: 'caseName' }, { label: '等級', get: r => r.level === 'err' ? '嚴重' : '注意' }, { label: '規則', get: r => r.rule + ' ' + r.ruleLabel }, { label: '代號', key: 'code' }, { label: '標題', key: 'title' }, { label: '說明', key: 'msg' }], rows: gapRows }
+  ]);
+  download(`${APP.filePrefix}_全部案件_${today()}.xls`, xml, 'application/vnd.ms-excel'); toast('已匯出 Excel（5 個工作表）', 'ok');
+}
+async function renderData(app) {
+  const counts = await Promise.all(DATA_STORES.map(async s => [s, await DB.count(s)]));
+  const tol = await Meta.get('tol', 0.01), lastBk = await Meta.get('lastBackup', '');
+  let est = ''; try { const e = await navigator.storage.estimate(); est = `已使用 ${fmtN(e.usage / 1048576, 1)} MB／可用 ${fmtN(e.quota / 1048576, 0)} MB`; } catch { }
+  const NAMES = { cases: '案件', nodes: '節點', links: '連結', datasets: '資料集', reviews: '覆核紀錄', attachments: '附件' };
+  app.innerHTML = `
+    <div class="card"><h2>匯出／備份</h2><div class="row">
+      <button class="btn pri" id="m-exp">⤓ 全部資料 JSON（含附件備份）</button>
+      <button class="btn" id="m-xls">⤓ Excel（案件／節點／連結／覆核／缺證）</button>
+      <button class="btn" id="m-print">🖨 列印當前案件報告 / 另存 PDF</button></div>
+      <p class="muted">上次備份：${lastBk ? esc(fmtD(lastBk)) : '尚未備份'}</p></div>
+    <div class="card"><h2>匯入</h2><div class="row">
+      <button class="btn" id="m-merge">⤒ 匯入 JSON（合併；相同 id 的資料會被覆寫）</button>
+      <button class="btn danger" id="m-restore">還原備份（清空後匯入）</button></div></div>
+    <div class="card"><h2>設定</h2><div class="row"><div class="field"><label>數字預設容許誤差（絕對值）</label><input id="m-tol" class="inp" value="${esc(tol)}" style="width:140px"></div><button class="btn" id="m-tol-save">儲存</button></div></div>
+    <div class="card"><h2>維護</h2><div class="row">
+      <button class="btn gold" id="m-sample">載入範例資料</button>
+      <button class="btn danger" id="m-clear">清除全部資料</button></div>
+      <p style="color:var(--muted)">${counts.map(([s, n]) => `${NAMES[s]}：${n} 筆`).join('　')}<br>${esc(est)}</p>
+      <p style="color:var(--warn)">⚠ 資料只存在本機瀏覽器（IndexedDB）。清除瀏覽器網站資料會遺失，請定期匯出 JSON 備份；請勿使用無痕模式。</p></div>`;
+  $('#m-exp', app).onclick = exportAll; $('#m-xls', app).onclick = exportExcelAll; $('#m-print', app).onclick = printReport;
+  $('#m-merge', app).onclick = () => pickImport('merge'); $('#m-restore', app).onclick = () => pickImport('restore');
+  $('#m-sample', app).onclick = loadSample;
+  $('#m-tol-save', app).onclick = async () => { const v = toNum($('#m-tol', app).value); if (v == null || v < 0) return toast('請輸入大於等於 0 的數字', 'err'); await Meta.set('tol', v); toast('已儲存預設容許誤差', 'ok'); };
+  $('#m-clear', app).onclick = async () => {
+    if (!await confirmBox('將刪除所有案件與資料且無法復原，確定？', '全部清除')) return;
+    await DB.tx(DATA_STORES, t => DATA_STORES.forEach(s => t.objectStore(s).clear())); State.case = null; State.sel = null; await Meta.set('currentCase', null); toast('已清除', 'ok'); refresh();
+  };
+}
+async function exportAll() {
+  const out = { app: APP.name, db: APP.dbName, version: APP.dbVersion, exportedAt: now(), settings: { tol: await Meta.get('tol', 0.01) }, data: {} };
+  for (const s of DATA_STORES) {
+    const rows = await DB.all(s);
+    out.data[s] = await Promise.all(rows.map(async r => r.blob instanceof Blob ? { ...r, blob: await blobToB64(r.blob) } : r));
+  }
+  download(`${APP.filePrefix}_全部備份_${today()}.json`, JSON.stringify(out), 'application/json');
+  await Meta.set('lastBackup', now()); toast('已匯出', 'ok');
+}
+/* 匯入前驗證：id 只允許英數底線連字號（防止 HTML 注入）、類型／關係／狀態必須是已知值、必要欄位型別正確 */
+function validateBackup(j) {
+  const idRe = /^[A-Za-z0-9_-]+$/, idF = ['caseId', 'nodeId', 'fromId', 'toId', 'datasetId'];
+  if (typeof j.version === 'number' && j.version > APP.dbVersion) throw new Error('備份檔來自較新版本的工具，請改用較新版');
+  for (const s of DATA_STORES) {
+    const arr = j.data[s]; if (arr == null) continue;
+    if (!Array.isArray(arr)) throw new Error(`${s} 格式錯誤（應為陣列）`);
+    arr.forEach((r, i) => {
+      const at = `${s} 第 ${i + 1} 筆`;
+      if (!r || typeof r !== 'object' || typeof r.id !== 'string' || !idRe.test(r.id)) throw new Error(`${at}的 id 不合法`);
+      idF.forEach(f => { if (r[f] != null && r[f] !== '' && !(typeof r[f] === 'string' && idRe.test(r[f]))) throw new Error(`${at}的 ${f} 不合法`); });
+      if (s === 'cases' && typeof r.name !== 'string') throw new Error(`${at}缺少名稱`);
+      if (s === 'nodes') {
+        if (typeof r.code !== 'string' || typeof r.title !== 'string') throw new Error(`${at}缺少代號或標題`);
+        if (typeof r.type !== 'string' || !hasOwn(TYPES, r.type)) throw new Error(`${at}的類型不合法`);
+        if (r.reviewStatus && !hasOwn(RSTAT, r.reviewStatus)) throw new Error(`${at}的覆核狀態不合法`);
+      }
+      if (s === 'links' && (typeof r.relation !== 'string' || !hasOwn(REL, r.relation))) throw new Error(`${at}的關係不合法`);
+      if (s === 'reviews' && (typeof r.status !== 'string' || !hasOwn(RSTAT, r.status) || typeof r.at !== 'string')) throw new Error(`${at}的狀態或時間不合法`);
+      if (s === 'datasets' && (!Array.isArray(r.columns) || !Array.isArray(r.rows))) throw new Error(`${at}的欄位或資料列格式錯誤`);
+    });
+  }
+}
+function pickImport(mode) {
+  const inp = $('#file-import'); inp.value = '';
+  inp.onchange = async () => {
+    const f = inp.files[0]; if (!f) return;
+    try {
+      const j = JSON.parse(await readText(f));
+      if (!j || !j.data || j.db !== APP.dbName) throw new Error('檔案格式不符（不是本工具匯出的 JSON）');
+      validateBackup(j);
+      if (mode === 'restore' && !await confirmBox('將先清空目前所有資料再匯入，確定？', '還原')) return;
+      const rows = {};
+      for (const s of DATA_STORES) rows[s] = (j.data[s] || []).map(r => typeof r.blob === 'string' && r.blob.startsWith('data:') ? { ...r, blob: b64ToBlob(r.blob) } : r);
+      await DB.tx(DATA_STORES, t => DATA_STORES.forEach(s => { const os = t.objectStore(s); if (mode === 'restore') os.clear(); rows[s].forEach(r => os.put(r)); }));
+      if (mode === 'restore' && j.settings && toNum(j.settings.tol) != null) await Meta.set('tol', toNum(j.settings.tol));
+      toast(`匯入完成：${DATA_STORES.map(s => `${s} ${rows[s].length}`).join('、')}`, 'ok'); refresh();
+    } catch (e) { console.error(e); toast('匯入失敗：' + e.message, 'err'); }
+  };
+  inp.click();
+}
+
+/* ---------- 範例資料 ---------- */
+async function loadSample() {
+  if (await DB.get('cases', 's-case')) { if (!await confirmBox('範例案件已存在，將以原始範例內容覆寫（您對範例案件的修改會遺失），確定？', '覆寫')) return; await deleteCaseData('s-case'); }
+  const t2 = new Date(Date.now() - 2 * 864e5).toISOString(), t1 = new Date(Date.now() - 864e5).toISOString(), t0 = now();
+  const C = 's-case';
+  const mk = (id, type, code, title, o = {}) => ({ id: 's-' + id, caseId: C, type, code, title, content: '', value: '', unit: '', formula: '', tolerance: '', refPath: '', datasetId: '', rowRef: '', reviewStatus: 'unreviewed', reviewedAt: null, createdAt: t2, updatedAt: t2, ...o });
+  const cse = { id: C, name: '不動產暴險分類調整之 RWA 影響（範例）', baseDate: '2026-10-31', owner: '承辦同仁', reviewer: '覆核主管', status: '覆核中', dueDate: addDays(14), note: '範例：刻意放入 1 個無來源數字（N4）、1 個核驗不符（N5 與 K2）、1 個空佐證（E3）。', createdAt: t2, updatedAt: t0 };
+  const ds = { id: 's-ds1', caseId: C, name: '不動產暴險明細（範例）', columns: ['案號', '暴險額', '調整前權數%', '調整後權數%', '調整前RWA', '調整後RWA'], rows: [['A001', 1200, 35, 70, 420, 840], ['A002', 600, 35, 70, 210, 420], ['A003', 400, 35, 60, 140, 240], ['A004', 440, 35, 55, 154, 242]], importedAt: t2 };
+  const P = { reviewStatus: 'pass', reviewedAt: t1 };
+  const nodes = [
+    mk('c1', 'claim', 'C1', '風險性資產增加 8.18 億元', { content: '以基準日 115 年 10 月 31 日計算，調整不動產暴險分類由「一般型」改為「收益型」後，風險性資產增加 8.18 億元。' }),
+    mk('c2', 'claim', 'C2', '平均風險權數由 35.0% 上升至 68.0%', { content: '分類調整後，不動產暴險平均風險權數約由 35.0% 上升至 68.0%。' }),
+    mk('n1', 'number', 'N1', '調整前 RWA 合計', { value: 924, unit: '百萬元', ...P }),
+    mk('n2', 'number', 'N2', '調整後 RWA 合計', { value: 1742, unit: '百萬元', ...P }),
+    mk('n3', 'number', 'N3', 'RWA 增加數', { value: 818, unit: '百萬元' }),
+    mk('n4', 'number', 'N4', '不動產暴險總額', { value: 2640, unit: '百萬元', content: '（範例：此數字尚未標示來源）' }),
+    mk('n5', 'number', 'N5', '調整後平均風險權數', { value: 68, unit: '%', reviewStatus: 'reject', reviewedAt: t1 }),
+    mk('k1', 'calc', 'K1', 'RWA 增加數計算', { formula: '{N2} - {N1}', value: 818, unit: '百萬元' }),
+    mk('k2', 'calc', 'K2', '平均風險權數計算', { formula: 'ROUND({N2}/{N4}*100,1)', value: 66, unit: '%', content: '調整後 RWA ÷ 暴險總額' }),
+    mk('d1', 'data', 'D1', '資料集：調整前 RWA 合計', { datasetId: 's-ds1', src: { col: '調整前RWA', mode: 'sum', row: 1 }, value: 924, rowRef: '不動產暴險明細（範例）｜調整前RWA｜合計', ...P }),
+    mk('d2', 'data', 'D2', '資料集：調整後 RWA 合計', { datasetId: 's-ds1', src: { col: '調整後RWA', mode: 'sum', row: 1 }, value: 1742, rowRef: '不動產暴險明細（範例）｜調整後RWA｜合計', ...P }),
+    mk('e1', 'evidence', 'E1', '內部函文：分類調整核定', { refPath: '公文系統 文號（範例）', ...P }),
+    mk('e2', 'evidence', 'E2', 'SQL 查詢結果', { content: '系統查詢 RWA 明細的結果檔', refPath: '\\\\檔案伺服器\\RWA\\查詢結果.xlsx（範例）', ...P }),
+    mk('e3', 'evidence', 'E3', '主管簽核紀錄', { content: '（範例：尚未附件，也未填參考路徑）' })
+  ];
+  const lk = (a, b, r) => ({ id: `s-l-${a}-${b}`, caseId: C, fromId: 's-' + a, toId: 's-' + b, relation: r });
+  const links = [lk('c1', 'n3', 'references'), lk('c1', 'e1', 'supported_by'), lk('c1', 'e3', 'supported_by'), lk('n3', 'k1', 'derived_from'), lk('k1', 'n1', 'references'), lk('k1', 'n2', 'references'),
+    lk('n1', 'd1', 'derived_from'), lk('n2', 'd2', 'derived_from'), lk('d1', 'e2', 'supported_by'), lk('d2', 'e2', 'supported_by'),
+    lk('c2', 'n5', 'references'), lk('n5', 'k2', 'derived_from'), lk('k2', 'n2', 'references'), lk('k2', 'n4', 'references')];
+  const rv = (n, status, comment, reviewer = '覆核主管') => ({ id: `s-r-${n}`, nodeId: 's-' + n, caseId: C, status, comment, reviewer, at: t1 });
+  const reviews = [rv('e1', 'pass', '文號與內容核對無誤'), rv('e2', 'pass', '查詢條件與基準日一致'), rv('d1', 'pass', '合計與資料集重算相符'), rv('d2', 'pass', '合計與資料集重算相符'), rv('n1', 'pass', '與 D1 相符'), rv('n2', 'pass', '與 D2 相符'), rv('n5', 'reject', '與計算 K2 重算值不符，請更正數字或公式')];
+  const att = { id: 's-a-e2', nodeId: 's-e2', caseId: C, name: '查詢結果_範例.txt', type: 'text/plain', size: 0, blob: new Blob(['範例佐證：SQL 查詢結果（模擬資料）\n調整前RWA 合計 924；調整後RWA 合計 1742'], { type: 'text/plain' }), createdAt: t2 };
+  att.size = att.blob.size;
+  await DB.tx(DATA_STORES, t => {
+    t.objectStore('cases').put(cse); t.objectStore('datasets').put(ds);
+    nodes.forEach(n => t.objectStore('nodes').put(n)); links.forEach(l => t.objectStore('links').put(l));
+    reviews.forEach(r => t.objectStore('reviews').put(r)); t.objectStore('attachments').put(att);
+  });
+  await setCase(C); toast('已載入範例資料', 'ok');
+  if (location.hash.slice(1) === 'map') refresh(); else location.hash = 'map';
+}
+
+/* ---------- 使用說明 ---------- */
+function renderHelp(app) {
+  app.innerHTML = `<div class="card"><h2>使用說明</h2>
+    <h3>這個工具做什麼？</h3><p>把報告中的<b>結論 → 數字 → 計算 → 原始資料 → 佐證附件</b>串成一條可追溯的鏈，並自動找出「沒有來源的數字」「算不平的計算」「沒有佐證的結論」。</p>
+    <h3>五種節點</h3><p>${Object.values(TYPES).map(t => `${t.icon} <b>${t.label}</b>`).join('　')}。每個節點有代號（C1、N1、K1、D1、E1…），公式用 <span class="mono">{N1}</span> 引用。</p>
+    <h3>快速上手</h3><ol>
+      <li>到「資料管理」按「載入範例資料」，先看「⭐ 佐證鏈地圖」的效果。</li>
+      <li>「查核案件」新增案件（名稱、基準日、承辦、覆核者、截止日）。</li>
+      <li>「節點工作台」新增結論，再逐層新增數字、計算、資料、佐證；在右側「連結」把它們串起來（方向：下游 → 上游）。</li>
+      <li>需要原始明細時，到「資料匯入」貼上 Excel 表格，再「建立資料節點」，系統會記住來源欄位並自動重算。</li>
+      <li>在「數字核驗」確認計算相符；在「覆核」逐節點通過／補件／退回；在「缺證清單」一鍵產生補件通知信。</li>
+      <li>「查核報告」可列印或另存 PDF（A4）。</li></ol>
+    <h3>健康度規則</h3><table class="grid"><tbody>${Object.entries(RULES).map(([k, v]) => `<tr><td class="mono">${k}</td><td>${tagHtml(v.label, v.level)}</td><td>${{ R0: '結論沒有任何路徑連到資料或佐證', R1: '數字沒有任何上游來源', R2: '重算值與宣稱值差異超過容許誤差，或資料集重算不符', R3: '佐證沒有附件，也沒有參考路徑', R4: '節點未被任何結論引用', R5: '節點或其上游在覆核通過後被修改', R6: '連結形成循環', RV: '覆核結果為退回或需補件' }[k]}</td></tr>`).join('')}</tbody></table>
+    <h3>公式</h3><p>可用數字、<span class="mono">{代號}</span>、<span class="mono">+ - * / ( )</span>，以及 <span class="mono">SUM</span>、<span class="mono">ROUND</span>、<span class="mono">ABS</span>。例：<span class="mono">ROUND({N2}/{N4}*100,1)</span>。全形的括號、逗號與運算符號會自動轉半形；ROUND 採四捨五入（與 Excel 一致）。系統以安全解析器計算，不執行任何程式碼。</p>
+    <h3>資料保存</h3><p>資料存在本機瀏覽器 IndexedDB，不會上傳。請勿使用無痕模式，並定期到「資料管理」匯出 JSON 備份；換電腦請用「還原備份」。Esc 可關閉對話框。匯出的 .xls 以 Excel 開啟時若出現格式提示，選「是」即可。</p></div>`;
+}
+
+/* =====================================================================
+ * 8. 啟動
+ * ===================================================================*/
+(async function boot() {
+  try { await DB.open(); }
+  catch (e) {
+    $('#app').innerHTML = `<div class="card"><h2>無法開啟 IndexedDB</h2><p>${esc(e.message || e)}</p><p>請勿使用無痕（InPrivate）模式，或洽資訊人員確認瀏覽器是否封鎖本機儲存。</p></div>`;
+    return;
+  }
+  try { await navigator.storage?.persist?.(); } catch { }
+  State.case = await Meta.get('currentCase', null);
+  $('#tb-import').onclick = () => pickImport('merge');
+  $('#tb-export').onclick = exportAll;
+  $('#tb-print').onclick = printReport;
+  $('#case-sel').onchange = async e => { await setCase(e.target.value || null); refresh(); };
+  const last = location.hash.slice(1) || await Meta.get('lastPage', 'dash');
+  if (location.hash.slice(1) !== last) location.hash = last; else go(last);
+})();
+window.addEventListener('error', e => toast('錯誤：' + e.message, 'err'));
+window.addEventListener('unhandledrejection', e => toast('錯誤：' + (e.reason?.message || e.reason), 'err'));
+</script>
+</body>
+</html>
